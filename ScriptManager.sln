@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptManager", "ScriptManager\ScriptManager.csproj", "{5925D13F-4C07-4D91-80CA-90FB82B7D1BD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5925D13F-4C07-4D91-80CA-90FB82B7D1BD}.Debug|x64.ActiveCfg = Debug|x64
+		{5925D13F-4C07-4D91-80CA-90FB82B7D1BD}.Debug|x64.Build.0 = Debug|x64
+		{5925D13F-4C07-4D91-80CA-90FB82B7D1BD}.Release|x64.ActiveCfg = Release|x64
+		{5925D13F-4C07-4D91-80CA-90FB82B7D1BD}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0564C870-C06B-428B-B1C8-C4954CBEB3C0}
+	EndGlobalSection
+EndGlobal

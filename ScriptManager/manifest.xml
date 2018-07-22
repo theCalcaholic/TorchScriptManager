@@ -1,0 +1,6 @@
+﻿<?xml version="1.0"?>
+<PluginManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ScriptManager</Name>
+  <Guid>5925d13f-4c07-4d91-80ca-90fb82b7d1bd</Guid>
+  <Version>v1.0.0</Version>
+</PluginManifest>
