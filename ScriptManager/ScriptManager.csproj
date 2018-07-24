@@ -37,11 +37,11 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Common">
-      <HintPath>..\TorchInstall\DedicatedServer64\Sandbox.Common.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\SpaceEngineers\Torch\DedicatedServer64\Sandbox.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Game">
-      <HintPath>..\TorchInstall\DedicatedServer64\Sandbox.Game.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\SpaceEngineers\Torch\DedicatedServer64\Sandbox.Game.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Sandbox.Graphics">
@@ -49,11 +49,11 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.Game">
-      <HintPath>..\TorchInstall\DedicatedServer64\SpaceEngineers.Game.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\SpaceEngineers\Torch\DedicatedServer64\SpaceEngineers.Game.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders">
-      <HintPath>..\TorchInstall\DedicatedServer64\SpaceEngineers.ObjectBuilders.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\SpaceEngineers\Torch\DedicatedServer64\SpaceEngineers.ObjectBuilders.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders.XmlSerializers">
@@ -81,7 +81,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage">
-      <HintPath>..\TorchInstall\DedicatedServer64\VRage.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\SpaceEngineers\Torch\DedicatedServer64\VRage.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Ansel">
@@ -97,7 +97,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Game">
-      <HintPath>..\TorchInstall\DedicatedServer64\VRage.Game.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\SpaceEngineers\Torch\DedicatedServer64\VRage.Game.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Game.XmlSerializers">
@@ -109,11 +109,11 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Library">
-      <HintPath>..\TorchInstall\DedicatedServer64\VRage.Library.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\SpaceEngineers\Torch\DedicatedServer64\VRage.Library.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Math">
-      <HintPath>..\TorchInstall\DedicatedServer64\VRage.Math.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\SpaceEngineers\Torch\DedicatedServer64\VRage.Math.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="VRage.Native">
@@ -146,7 +146,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Plugin.cs" />
+    <Compile Include="ScriptManagerPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
