@@ -32,6 +32,8 @@ using VRage.Network;
 using VRageMath;
 using VRage.Collections;
 using Sandbox.ModAPI.Ingame;
+using Sandbox.Game.Entities;
+using Sandbox.Common.ObjectBuilders;
 using VRage.Game.ModAPI.Ingame;
 using Sandbox.Game.EntityComponents;
 using SpaceEngineers.Game.ModAPI.Ingame;
@@ -39,6 +41,7 @@ using Sandbox.Game.Entities.Blocks;
 using Sandbox.Engine.Multiplayer;
 using System.Security.Cryptography;
 using Sandbox.Engine.Utils;
+using Sandbox.ModAPI;
 
 namespace ScriptManager
 {
@@ -50,11 +53,32 @@ namespace ScriptManager
 
         private Persistent<ScriptManagerConfig> _config;
 
-        private UserControl _control;
+        private ScriptManagerUserControl _control;
 
         public ScriptManagerConfig Config => _config?.Data;
 
         private static MD5 md5Hash;
+
+        private static string BlockedScript = @"
+public Program()
+{
+    throw new Exception(""Script was blocked by Whitelist!"");
+}
+
+
+
+public void Save()
+{
+    throw new Exception(""Script was blocked by Whitelist!"");
+}
+
+
+
+public void Main(string argument, UpdateType updateSource)
+{
+    throw new Exception(""Script was blocked by Whitelist!"");
+}
+";
 
         public ScriptEntry[] Whitelist
         {
@@ -70,7 +94,7 @@ namespace ScriptManager
         //public UserControl GetControl() {
         //    return _control ?? (_control = new ScriptManagerControl(this));
         //}
-        public UserControl GetControl() => _control ?? (_control = new PropertyGrid() { DataContext = Config, IsEnabled = true });
+        public UserControl GetControl() => _control ?? (_control = new ScriptManagerUserControl() { DataContext = Config, Plugin = this });
 
         /// <inheritdoc />
         public override void Init(ITorchBase torch)
@@ -83,13 +107,13 @@ namespace ScriptManager
             //    _sessionManager.SessionStateChanged += SessionChanged;
             var patchMgr = torch.Managers.GetManager<PatchManager>();
             var patchContext = patchMgr.AcquireContext();
-            ScriptManagerPlugin.Apply(patchContext);     //apply hooks
+            ScriptManagerPlugin.PatchPB(patchContext);     //apply hooks
             patchMgr.Commit();
             //Your init code here, the game is not initialized at this point.
             Instance = this;
         }
 
-        static public void Apply(PatchContext context)
+        static public void PatchPB(PatchContext context)
         {
             //var pbCreateInstance = typeof(MyProgrammableBlock).GetMethod("CreateInstance", BindingFlags.Instance | BindingFlags.NonPublic);
             var pbCompile = typeof(MyProgrammableBlock).GetMethod("Compile", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -97,41 +121,14 @@ namespace ScriptManager
             if (pbCompile == null)
                 throw new InvalidOperationException("Couldn't find Compile");
             var checkWhiteListCompile = typeof(ScriptManagerPlugin).GetMethod("CheckWhitelistCompile");
-            if (checkWhiteListCompile == null)
-                throw new InvalidOperationException("METHOD NOT FOUND!!!");
             context.GetPattern(pbCompile).Prefixes.Add(checkWhiteListCompile);
 
-
-            var pbRecompile = typeof(MyProgrammableBlock).GetMethod("Recompile", BindingFlags.Instance | BindingFlags.NonPublic, Type.DefaultBinder, new Type[] { typeof(bool) }, null);
-            if (pbRecompile == null)
-                throw new InvalidOperationException("Couldn't find Recompile!");
-            var block = typeof(ScriptManagerPlugin).GetMethod("Block");
-            context.GetPattern(pbRecompile).Prefixes.Add(block);
-
-            /*var pbUpdateProgram = typeof(MyProgrammableBlock).GetMethod("UpdateProgram"); //, BindingFlags.Instance | BindingFlags.NonPublic, Type.DefaultBinder, new Type[] { typeof(string) }, null);
-            if (pbUpdateProgram == null)
-                throw new InvalidOperationException("Couldn't find UpdateProgram");
-            var checkWhiteListUpdateProgram = typeof(ScriptManagerPlugin).GetMethod("CheckWhitelistUpdateProgram");
-            context.GetPattern(pbUpdateProgram).Prefixes.Add(checkWhiteListUpdateProgram);*/
-
-            var pbCreateInstance = typeof(MyProgrammableBlock).GetMethod("CreateInstance", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (pbCreateInstance == null)
-                throw new Exception("Couldn't find CreateInstance!");
-            var logCreateInstanceExecution = typeof(ScriptManagerPlugin).GetMethod("LogCreateInstanceExecution");
-            context.GetPattern(pbCreateInstance).Suffixes.Add(logCreateInstanceExecution);
-
-            var logCompileExecution = typeof(ScriptManagerPlugin).GetMethod("LogCompileExecution");
-            context.GetPattern(pbCompile).Suffixes.Add(logCompileExecution);
         }
 
-        static public bool Block(bool instantiate, object __instance = null)
+        static public bool CheckWhitelistCompile(string program, string storage, bool instantiate, object __instance = null)
         {
-            Log.Info("Blocking Recompile...");
-            return false;
-        }
-
-        static public bool CheckWhitelistCompile(string program, string storage, ref bool instantiate, object __instance = null)
-        {
+            if (program == null)
+                return true;
             var md5 = MD5.Create();
             var scriptHash = ScriptManagerPlugin.GetMD5Hash(program);
             var comparer = StringComparer.OrdinalIgnoreCase;
@@ -143,58 +140,34 @@ namespace ScriptManager
                     return true;
                 }
             }
-            instantiate = false;
             //_instance?.SetDetailedInfo("Script is not whitelisted. Compilation rejected!");
+
+            //MyMultiplayer.RaiseEvent<MyProgrammableBlock>(__instance, (MyProgrammableBlock x) => x.WriteProgramResponse, msg, default(EndpointId));
+
             var msg = "Script is not whitelisted. Compilation rejected!";
             Log.Info(msg);
             Log.Info("Script hash was: <" + scriptHash + ">");
 
+
             var setDetailedInfo = typeof(MyProgrammableBlock).GetMethod("SetDetailedInfo", BindingFlags.NonPublic | BindingFlags.Instance);
             if (setDetailedInfo == null)
                 throw new InvalidOperationException("method SetDetailedInfo could not be retrieved!");
-            setDetailedInfo.Invoke(__instance, new object[] { msg });
 
-            //MyMultiplayer.RaiseEvent<MyProgrammableBlock>(__instance, (MyProgrammableBlock x) => x.WriteProgramResponse, msg, default(EndpointId));
-            return false;
-        }
-
-        static public bool CheckWhitelistUpdateProgram(string program, MyProgrammableBlock __instance)
-        {
-            var md5 = MD5.Create();
-            var scriptHash = ScriptManagerPlugin.GetMD5Hash(program);
-            var comparer = StringComparer.OrdinalIgnoreCase;
-            foreach (var script in ScriptManagerPlugin.Instance.Whitelist)
+            Task.Delay(300).ContinueWith(_ =>
             {
-                if (script.Enabled && comparer.Compare(scriptHash, script.MD5Hash) == 0)
-                {
-                    Log.Info("Script found on whitelist! Compiling...");
-                    return true;
-                }
-            }
-            //_instance?.SetDetailedInfo("Script is not whitelisted. Compilation rejected!");
-            var msg = "Script is not whitelisted. Compilation rejected!";
-            Log.Info(msg);
-            Log.Info("Script hash was: <" + scriptHash + ">");
+                setDetailedInfo.Invoke(__instance, new object[] { msg });
+            });
 
-            var setDetailedInfo = typeof(MyProgrammableBlock).GetMethod("SetDetailedInfo", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (setDetailedInfo == null)
-                throw new InvalidOperationException("method SetDetailedInfo could not be retrieved!");
-            setDetailedInfo.Invoke(__instance, new object[] { msg });
-
-            //MyMultiplayer.RaiseEvent<MyProgrammableBlock>(__instance, (MyProgrammableBlock x) => x.WriteProgramResponse, msg, default(EndpointId));
             return false;
         }
 
-        static public void LogCompileExecution(string program, string storage, bool instantiate = false, object __instance = null)
+        /*static public void SetPBDetailedInfo(string info, object instance)
         {
-            Log.Info("Compile was executed.");
-        }
-
-        static public void LogCreateInstanceExecution(Assembly assembly, IEnumerable<string> messages, string storage, object __instance = null)
-        {
-            Log.Info("Compile was executed.");
-        }
-
+            var setDetailedInfo = typeof(MyProgrammableBlock).GetMethod("SetDetailedInfo", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (setDetailedInfo == null)
+                throw new InvalidOperationException("method SetDetailedInfo could not be retrieved!");
+            setDetailedInfo.Invoke(instance, new object[] { info });
+        }*/
 
         static public string GetMD5Hash(string input)
         {

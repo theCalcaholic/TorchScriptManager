@@ -1,0 +1,30 @@
+﻿<UserControl x:Class="ScriptManager.ScriptManagerUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ScriptManager"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.DataContext>
+        <local:ScriptManagerConfig/>
+    </UserControl.DataContext>
+    <StackPanel>
+        <CheckBox Content="Enable Whitelist" Margin="3" IsChecked="{Binding Enabled}"/>
+        <DataGrid Name="WhitelistGrid" ItemsSource="{Binding Whitelist, UpdateSourceTrigger=PropertyChanged}" Margin="10"/>
+        <Grid x:Name="WhitelistControls">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Button Grid.Row="0" Grid.Column="2" Click="OpenAddFromCodeDialog">Add from Code</Button>
+            <Button Width="Auto" Grid.Row="0" Grid.Column="4" Click="OpenAddFromWorkshopDialog" IsEnabled="False" ToolTip="Work In Progress">Add from Workshop [WIP]</Button>
+        </Grid>
+    </StackPanel>
+</UserControl>

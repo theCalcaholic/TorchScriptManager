@@ -156,6 +156,9 @@
     <Compile Include="ScriptManagerConfig.cs" />
     <Compile Include="ScriptManagerPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ui\ScriptManagerUserControl.xaml.cs">
+      <DependentUpon>ScriptManagerUserControl.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.xml">
@@ -165,6 +168,13 @@
   <ItemGroup>
     <None Include="EnsureSymlink.ps1" />
     <None Include="ZipOutput.ps1" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Page Include="ui\ScriptManagerUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

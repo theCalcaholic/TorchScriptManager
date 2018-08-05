@@ -7,13 +7,26 @@ using System.Text;
 using System.Threading.Tasks;
 using Torch;
 using Torch.Views;
+using System.Xml.Serialization;
 
 namespace ScriptManager
 {
     public class ScriptManagerConfig : ViewModel
     {
+        private bool _enabled = true;
+
+        public bool Enabled
+        {
+            get => _enabled;
+            set
+            {
+                _enabled = value;
+                OnPropertyChanged();
+            }
+        }
+
         private ObservableCollection<ScriptEntry> _whitelist = new ObservableCollection<ScriptEntry>();
-        [Display(EditorType = typeof(EmbeddedCollectionEditor))]
+        //[Display(EditorType = typeof(EmbeddedCollectionEditor))]
         public ObservableCollection<ScriptEntry> Whitelist
         {
             get { return _whitelist; }
