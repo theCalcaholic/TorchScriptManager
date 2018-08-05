@@ -127,12 +127,12 @@ public void Main(string argument, UpdateType updateSource)
 
         static public bool CheckWhitelistCompile(string program, string storage, bool instantiate, object __instance = null)
         {
-            if (program == null)
+            if (Instance.Config.Enabled && program == null)
                 return true;
-            var md5 = MD5.Create();
-            var scriptHash = ScriptManagerPlugin.GetMD5Hash(program);
+            program = program.Replace("\r", "");
+            var scriptHash = GetMD5Hash(program);
             var comparer = StringComparer.OrdinalIgnoreCase;
-            foreach(var script in ScriptManagerPlugin.Instance.Whitelist)
+            foreach(var script in Instance.Whitelist)
             {
                 if (script.Enabled && comparer.Compare(scriptHash, script.MD5Hash) == 0)
                 {
