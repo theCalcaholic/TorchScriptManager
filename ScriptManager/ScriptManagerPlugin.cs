@@ -127,7 +127,7 @@ public void Main(string argument, UpdateType updateSource)
 
         static public bool CheckWhitelistCompile(string program, string storage, bool instantiate, object __instance = null)
         {
-            if (Instance.Config.Enabled && program == null)
+            if (!Instance.Config.Enabled || program == null || program == "")
                 return true;
             program = program.Replace("\r", "");
             var scriptHash = GetMD5Hash(program);
@@ -139,6 +139,34 @@ public void Main(string argument, UpdateType updateSource)
                     Log.Info("Script found on whitelist! Compiling...");
                     return true;
                 }
+                /*else
+                {
+                    Log.Info("Script is different to " + script.Name);
+                    var comparison = "";
+                    for (int i = 0; i < Math.Max(program.Length, script.Code.Length); i++)
+                    {
+                        if( i >= program.Length )
+                        {
+                            comparison += "<|" + script.Code[i] + ">";
+                        }
+                        else if( i >= script.Code.Length )
+                        {
+                            comparison += "<" + program[i] + "|>";
+                        }
+                        else if( program[i] == script.Code[i] )
+                        {
+                            comparison += program[i];
+                        }
+                        else
+                        {
+                            comparison += "<" + program[i] + "|" + script.Code[i] + ">";
+                        }
+                    }
+                    comparison = comparison.Replace("\r", "\\r");
+                    comparison = comparison.Replace("\n", "\\n");
+                    comparison = comparison.Replace("\t", "\\t");
+                    Log.Info(comparison);
+                }*/
             }
             //_instance?.SetDetailedInfo("Script is not whitelisted. Compilation rejected!");
 
@@ -190,6 +218,7 @@ public void Main(string argument, UpdateType updateSource)
         /// <inheritdoc />
         public override void Dispose()
         {
+            Save();
             //Unload your plugin here.
         }
 

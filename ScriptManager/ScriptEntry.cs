@@ -6,9 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Torch;
 using Torch.API;
-using Torch.Views;
+using TViews = Torch.Views;
 using Torch.Server;
 using Torch.Commands;
+using System.ComponentModel;
 
 namespace ScriptManager
 {
@@ -26,7 +27,7 @@ namespace ScriptManager
         }
 
         private string _name;
-        [Display(Description = "Script Name")]
+        [TViews.Display(Description = "Script Name")]
         public string Name
         {
             get => _name;
@@ -38,13 +39,27 @@ namespace ScriptManager
         }
 
         private string _md5Hash;
-        [Display(Name = "MD5 Hash", Description = "MD5 Hash of the script's code.")]
+        [TViews.Display(Name = "MD5 Hash", Description = "MD5 Hash of the script's code.")]
         public string MD5Hash
         {
             get => _md5Hash;
             set
             {
                 _md5Hash = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _code;
+        //[Display(AutoGenerateField = false)]
+        //[TViews.Display(Name = "Code", Description = "The script's source code")]
+        [Browsable(false)]
+        public string Code
+        {
+            get => _code;
+            set
+            {
+                _code = value;
                 OnPropertyChanged();
             }
         }

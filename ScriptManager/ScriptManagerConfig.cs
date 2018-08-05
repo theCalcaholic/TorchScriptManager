@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -31,6 +32,11 @@ namespace ScriptManager
         {
             get { return _whitelist; }
             set { SetValue(ref _whitelist, value); }
+        }
+
+        public ScriptManagerConfig() : base()
+        {
+            Whitelist.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => { OnPropertyChanged(); };
         }
     }
 }

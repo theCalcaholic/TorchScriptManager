@@ -11,7 +11,17 @@
     </UserControl.DataContext>
     <StackPanel>
         <CheckBox Content="Enable Whitelist" Margin="3" IsChecked="{Binding Enabled}"/>
-        <DataGrid Name="WhitelistGrid" ItemsSource="{Binding Whitelist, UpdateSourceTrigger=PropertyChanged}" Margin="10"/>
+        <DataGrid Name="WhitelistGrid" 
+                  ItemsSource="{Binding Whitelist, UpdateSourceTrigger=PropertyChanged}" 
+                  Margin="10" 
+                  AutoGenerateColumns="False"
+                  TargetUpdated="DataGrid_TargetUpdated">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                <DataGridTextColumn Header="Script Name" Binding="{Binding Name, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                <DataGridTextColumn Header="MD5 Hash" Binding="{Binding MD5Hash, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+            </DataGrid.Columns>
+        </DataGrid>
         <Grid x:Name="WhitelistControls">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -24,7 +34,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Button Grid.Row="0" Grid.Column="2" Click="OpenAddFromCodeDialog">Add from Code</Button>
-            <Button Width="Auto" Grid.Row="0" Grid.Column="4" Click="OpenAddFromWorkshopDialog" IsEnabled="False" ToolTip="Work In Progress">Add from Workshop [WIP]</Button>
+            <Button Width="Auto" Grid.Row="0" Grid.Column="4" Click="OpenAddFromWorkshopDialog" IsEnabled="False" Visibility="Hidden" ToolTip="Work In Progress">Add from Workshop [WIP]</Button>
         </Grid>
     </StackPanel>
 </UserControl>
