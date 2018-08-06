@@ -11,19 +11,25 @@
     </UserControl.DataContext>
     <StackPanel>
         <CheckBox Content="Enable Whitelist" Margin="3" IsChecked="{Binding Enabled}"/>
-        <DataGrid Name="WhitelistGrid" 
+        <DataGrid Name="WhitelistTable" 
                   ItemsSource="{Binding Whitelist, UpdateSourceTrigger=PropertyChanged}" 
                   Margin="10" 
                   AutoGenerateColumns="False"
-                  TargetUpdated="DataGrid_TargetUpdated">
+                  TargetUpdated="WhitelistUpdated"
+                  CanUserAddRows="False"
+                  SelectionMode="Single">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
                 <DataGridTextColumn Header="Script Name" Binding="{Binding Name, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-                <DataGridTextColumn Header="MD5 Hash" Binding="{Binding MD5Hash, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                <DataGridTextColumn IsReadOnly="True" Header="MD5 Hash" Binding="{Binding MD5Hash, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
             </DataGrid.Columns>
         </DataGrid>
-        <Grid x:Name="WhitelistControls">
+        <Grid x:Name="WhitelistControls" Margin="12 0">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="20"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="20"/>
                 <ColumnDefinition Width="Auto"/>
@@ -33,8 +39,17 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Button Grid.Row="0" Grid.Column="2" Click="OpenAddFromCodeDialog">Add from Code</Button>
-            <Button Width="Auto" Grid.Row="0" Grid.Column="4" Click="OpenAddFromWorkshopDialog" IsEnabled="False" Visibility="Hidden" ToolTip="Work In Progress">Add from Workshop [WIP]</Button>
+            <Button Grid.Column="4" Click="OpenAddFromCodeDialog">Add from Code</Button>
+            <Button Grid.Row="0" Grid.Column="4" Click="OpenAddFromWorkshopDialog" IsEnabled="False" Visibility="Hidden" ToolTip="Work In Progress">Add from Workshop [WIP]</Button>
+            <Button Click="EditSelectedScript" 
+                    IsEnabled="{Binding ElementName=WhitelistTable, Path=SelectedItems.Count}">
+                Edit
+            </Button>
+            <Button Grid.Column="2" 
+                    Click="RemoveSelectedScript"
+                    IsEnabled="{Binding ElementName=WhitelistTable, Path=SelectedItems.Count}">
+                Remove
+            </Button>
         </Grid>
     </StackPanel>
 </UserControl>

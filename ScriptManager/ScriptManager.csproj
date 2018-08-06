@@ -160,6 +160,7 @@
     <Compile Include="ui\ScriptManagerUserControl.xaml.cs">
       <DependentUpon>ScriptManagerUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ui\TextEditor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.xml">
