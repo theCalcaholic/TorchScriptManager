@@ -21,7 +21,7 @@
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
                 <DataGridTextColumn Header="Script Name" Binding="{Binding Name, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-                <DataGridTextColumn IsReadOnly="True" Header="MD5 Hash" Binding="{Binding MD5Hash, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+                <DataGridTextColumn Width="*" IsReadOnly="True" Header="MD5 Hash" Binding="{Binding MD5Hash, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
             </DataGrid.Columns>
         </DataGrid>
         <Grid x:Name="WhitelistControls" Margin="12 0">

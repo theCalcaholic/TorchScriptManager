@@ -77,7 +77,6 @@ namespace ScriptManager
             };
 
             editor.Show();
-
         }
 
         private void RemoveSelectedScript(object sender, RoutedEventArgs e)
