@@ -2,7 +2,14 @@
     [Parameter(Mandatory=$true)][string]$mode
  )
 
-$zipPath = Join-Path (pwd) "$mode.zip"
+if ( "$mode" -eq "Release" )
+{
+    $zipPath = Join-Path (pwd) "ScriptManager.zip"
+}
+else
+{
+    $zipPath = Join-Path (pwd) "$mode.zip"
+}
 $binPath = Join-Path (pwd) "bin\x64\$mode\"
 
 if (Test-Path $binPath)
