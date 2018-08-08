@@ -55,6 +55,8 @@ namespace ScriptManager
         private Persistent<ScriptManagerConfig> _config;
 
         private ScriptManagerUserControl _control;
+        private bool IsClientModReady = false;
+        private long MessageHandlerId = 36235;
 
         public ScriptManagerConfig Config => _config?.Data;
 
@@ -81,7 +83,10 @@ namespace ScriptManager
         {
             base.Init(torch);
             _config = Persistent<ScriptManagerConfig>.Load(Path.Combine(StoragePath, "ScriptManager.cfg"));
+            
             md5Hash = MD5.Create();
+
+
             _sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
             //if (_sessionManager != null)
             //    _sessionManager.SessionStateChanged += SessionChanged;
@@ -112,7 +117,7 @@ namespace ScriptManager
             program = program.Replace("\r", "");
             var scriptHash = GetMD5Hash(program);
             var comparer = StringComparer.OrdinalIgnoreCase;
-            foreach(var script in Instance.Whitelist)
+            foreach (var script in Instance.Whitelist)
             {
                 if (script.Enabled && comparer.Compare(scriptHash, script.MD5Hash) == 0)
                 {
@@ -182,7 +187,7 @@ namespace ScriptManager
             byte[] data = ScriptManagerPlugin.md5Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
             var sBuilder = new StringBuilder();
 
-            for( int i = 0; i < data.Length; i++ )
+            for (int i = 0; i < data.Length; i++)
             {
                 sBuilder.Append(data[i].ToString("x2"));
             }
@@ -213,9 +218,10 @@ namespace ScriptManager
             {
                 case TorchSessionState.Loading:
                     //Executed before the world loads.
+                    MyAPIGateway.Utilities.RegisterMessageHandler(MessageHandlerId, OnModReady);
                     break;
                 case TorchSessionState.Loaded:
-                    //Executed after the world has finished loading.
+                    //Executed after the world has loaded.
                     break;
                 case TorchSessionState.Unloading:
                     //Executed before the world unloads.
@@ -224,6 +230,27 @@ namespace ScriptManager
                     //Executed after the world unloads.
                     break;
             }
+        }
+
+        private void OnModReady(object data)
+        {
+            IsClientModReady = true;
+            SendWhitelistToMod();
+        }
+
+        private void SendWhitelistToMod()
+        {
+            var scriptTitles = new Dictionary<long, string>();
+            var scriptBodies = new Dictionary<long, string>();
+            foreach(var script in Whitelist)
+            {
+                if (script.Enabled)
+                {
+                    scriptTitles.Add(script.Id, script.Name);
+                    scriptBodies.Add(script.Id, script.Code);
+                }
+            }
+            MyAPIGateway.Utilities.SendModMessage(MessageHandlerId, new object[] { scriptTitles, scriptBodies });
         }
     }
 }

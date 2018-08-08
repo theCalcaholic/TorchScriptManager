@@ -15,13 +15,31 @@ namespace ScriptManager
 {
     public class ScriptEntry : ViewModel
     {
+        private static long nextId = 0;
+
         private bool _enabled;
+
+        private long _id;
+
+        public ScriptEntry()
+        {
+            Id = nextId++;
+        }
         public bool Enabled
         {
             get => _enabled;
             set
             {
                 _enabled = value;
+                OnPropertyChanged();
+            }
+        }
+        public long Id
+        {
+            get => _id;
+            set
+            {
+                _id = value;
                 OnPropertyChanged();
             }
         }
