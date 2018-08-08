@@ -146,14 +146,15 @@ namespace ScriptManager
 
         private void Save(object sender, RoutedEventArgs e)
         {
-            if (TitleEditor.Text == "")
+            if (string.IsNullOrEmpty(TitleEditor.Text))
             {
                 ShowMessage("Script must have a title!", MessageType.Error, 5000);
                 return;
             }
-            if(CodeEditor.Text == "")
+            if(string.IsNullOrEmpty(CodeEditor.Text))
             {
                 ShowMessage("You need to insert a script!", MessageType.Error, 5000);
+                return;
             }
             OnSaveAndClose(new ScriptSaveEventArgs() { Title = TitleEditor.Text, Code = CodeEditor.Text });
             Close();
