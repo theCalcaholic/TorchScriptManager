@@ -31,8 +31,9 @@ namespace ScriptManager
             var marginSize = 12;
 
             Width = 800;
-            MaxHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
-            SizeToContent = SizeToContent.Height;
+            Height = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height * 0.7;
+            
+            //SizeToContent = SizeToContent.Height;
 
             TitleLabel = new Label() { Content = "Script Name:" };
             TitleEditor = new TextBox()
