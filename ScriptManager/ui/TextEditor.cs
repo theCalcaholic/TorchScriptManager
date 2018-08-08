@@ -94,16 +94,9 @@ namespace ScriptManager
             TitleGrid.Children.Add(TitleLabel);
             TitleGrid.Children.Add(TitleEditor);
             Grid.SetColumn(TitleEditor, 2);
-
-            /*var staticElementsHeight = GetValueOrZero(titleGrid.Height) + GetValueOrZero(titleGrid.Margin.Top) + GetValueOrZero(titleGrid.Margin.Bottom)
-                + GetValueOrZero(MessageBox.Height) + GetValueOrZero(MessageBox.Margin.Top) + GetValueOrZero(MessageBox.Margin.Bottom)
-                + GetValueOrZero(SaveButton.Height) + GetValueOSaveButton.Margin.Top + SaveButton.Margin.Bottom;*/
             staticElementsHeight = 0D;
             //Height = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height * 0.8;
             MinHeight = 400;
-
-            //SizeChanged += OnResize;
-            //ContentRendered += CalculateStaticElementsSize;
 
             RootContainer = new Grid()
             {
@@ -132,49 +125,6 @@ namespace ScriptManager
             Grid.SetRow(NotificationBox, 3);
 
             AddChild(RootContainer);
-
-            OnResize(this, null);
-        }
-
-        private void CalculateStaticElementsSize(object sender, EventArgs e)
-        {
-            if (staticElementsHeight == 0D)
-            {
-                staticElementsHeight = GetValueOrZero(CodeEditor.Margin.Top) + GetValueOrZero(CodeEditor.Margin.Bottom);
-                foreach (var element in new FrameworkElement[] { NotificationBox, SaveButton, TitleGrid })
-                {
-                    staticElementsHeight += GetValueOrZero(element.ActualHeight) + GetValueOrZero(element.Margin.Top) + GetValueOrZero(element.Margin.Bottom);
-                }
-
-                MinHeight = 400 + staticElementsHeight;
-                OnResize(this, null);
-            }
-        }
-
-        private void OnResize(object sender, SizeChangedEventArgs e)
-        {
-            //CodeEditor.MinHeight = (int) Math.Max(ActualHeight - staticElementsHeight, 400);
-            //CodeEditor.MaxLines = (int) (CodeEditor.MinHeight / FontSize);
-            //CodeEditor.MaxWidth = Width - GetValueOrZero(CodeEditor.Margin.Left) - GetValueOrZero(CodeEditor.Margin.Right);
-            //CodeEditor.MaxHeight = (int)Math.Max((Height - staticElementsHeight), 400);
-            Log.Info("Height: " + Height);
-            Log.Info("static elements height: " + staticElementsHeight);
-            Log.Info("font size: " + FontSize);
-            Log.Info("Code Editor min height: " + CodeEditor.MinHeight);
-            Log.Info("Code Editor max lines: " + CodeEditor.MaxLines);
-            Log.Info("Actual Height: " + ActualHeight);
-            Log.Info("static elements + code editor height: " + (staticElementsHeight + CodeEditor.MinHeight));
-            Log.Info("{");
-            foreach(var element in new FrameworkElement[] { TitleLabel, TitleEditor, TitleGrid, CodeEditor, SaveButton, NotificationBox })
-            {
-                var typeName = element.ToString();
-                typeName = typeName.Substring(typeName.LastIndexOf('.') + 1);
-                Log.Info("    " + typeName + " height: " + element.Height);
-                Log.Info("    " + typeName + " margin top: " + element.Margin.Top);
-                Log.Info("    " + typeName + " margin bottom: " + element.Margin.Bottom);
-                Log.Info("    " + typeName + " actual height: " + element.ActualHeight);
-            }
-            Log.Info("}");
         }
 
         private Double GetValueOrZero(double value)
