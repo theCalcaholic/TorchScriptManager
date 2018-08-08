@@ -42,6 +42,7 @@ using Sandbox.Engine.Multiplayer;
 using System.Security.Cryptography;
 using Sandbox.Engine.Utils;
 using Sandbox.ModAPI;
+using Sandbox.Game.World;
 
 namespace ScriptManager
 {
@@ -58,27 +59,6 @@ namespace ScriptManager
         public ScriptManagerConfig Config => _config?.Data;
 
         private static MD5 md5Hash;
-
-        private static string BlockedScript = @"
-public Program()
-{
-    throw new Exception(""Script was blocked by Whitelist!"");
-}
-
-
-
-public void Save()
-{
-    throw new Exception(""Script was blocked by Whitelist!"");
-}
-
-
-
-public void Main(string argument, UpdateType updateSource)
-{
-    throw new Exception(""Script was blocked by Whitelist!"");
-}
-";
 
         public ScriptEntry[] Whitelist
         {
