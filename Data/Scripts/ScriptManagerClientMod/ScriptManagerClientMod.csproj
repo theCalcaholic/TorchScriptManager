@@ -11,6 +11,7 @@
     <AssemblyName>ScriptManagerClientMod</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -115,8 +117,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ScriptManager.cs" />
+    <Compile Include="Requests\RemoteRequest.cs" />
+    <Compile Include="ScriptManagerCore.cs" />
+    <Compile Include="Requests\RecompileRequest.cs" />
+    <Compile Include="ScriptInfo.cs" />
+    <Compile Include="ScriptManagerGameLogic.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Requests\WhitelistActionRequest.cs" />
+    <Compile Include="CommonData.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
