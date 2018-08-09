@@ -10,11 +10,13 @@ using TViews = Torch.Views;
 using Torch.Server;
 using Torch.Commands;
 using System.ComponentModel;
+using NLog;
 
 namespace ScriptManager
 {
     public class ScriptEntry : ViewModel
     {
+        private static readonly Logger Log = LogManager.GetLogger("Scriptmanager");
         private static long nextId = 0;
 
         private bool _enabled;
@@ -39,7 +41,17 @@ namespace ScriptManager
             get => _id;
             set
             {
-                _id = value;
+                if( _id > nextId )
+                {
+                    Log.Warn("Invalid script Id! Id will be changed.");
+                    _id = nextId++;
+                }
+                else
+                {
+                    _id = value;
+                    nextId = _id + 1;
+                }
+
                 OnPropertyChanged();
             }
         }
@@ -69,9 +81,6 @@ namespace ScriptManager
         }
 
         private string _code;
-        //[Display(AutoGenerateField = false)]
-        //[TViews.Display(Name = "Code", Description = "The script's source code")]
-        [Browsable(false)]
         public string Code
         {
             get => _code;

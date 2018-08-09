@@ -71,8 +71,11 @@ namespace ScriptManager
 
             editor.SaveAndClose += (object s, TextEditor.ScriptSaveEventArgs scriptData) =>
             {
+                var scriptCode = scriptData.Code.Replace("\r", "");
+                var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
                 script.Name = scriptData.Title;
-                script.Code = scriptData.Code;
+                script.Code = scriptCode;
+                script.MD5Hash = scriptHash;
                 WhitelistUpdated(this, null);
             };
 

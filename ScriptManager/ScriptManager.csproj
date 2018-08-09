@@ -154,7 +154,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ScriptEntry.cs" />
-    <Compile Include="ScriptManagerOldConfig.cs" />
     <Compile Include="ScriptManagerConfig.cs" />
     <Compile Include="ScriptManagerPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

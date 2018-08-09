@@ -56,7 +56,8 @@ namespace ScriptManager
 
         private ScriptManagerUserControl _control;
         private bool IsClientModReady = false;
-        private long MessageHandlerId = 36235;
+        private long ModMessageHandlerId = 36235;
+        private long PluginMessageHandlerId = 59300040;
 
         public ScriptManagerConfig Config => _config?.Data;
 
@@ -88,8 +89,8 @@ namespace ScriptManager
 
 
             _sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
-            //if (_sessionManager != null)
-            //    _sessionManager.SessionStateChanged += SessionChanged;
+            if (_sessionManager != null)
+                _sessionManager.SessionStateChanged += OnSessionStateChanged;
             var patchMgr = torch.Managers.GetManager<PatchManager>();
             var patchContext = patchMgr.AcquireContext();
             ScriptManagerPlugin.PatchPB(patchContext);     //apply hooks
@@ -217,10 +218,16 @@ namespace ScriptManager
             switch (newState)
             {
                 case TorchSessionState.Loading:
+                    MyAPIGateway.Session.Mods.Add(
+                        new MyObjectBuilder_Checkpoint.ModItem(
+                            "1470445959.sbm", 
+                            1470445959, 
+                            "ScriptManager Client Mod"));
                     //Executed before the world loads.
-                    MyAPIGateway.Utilities.RegisterMessageHandler(MessageHandlerId, OnModReady);
                     break;
                 case TorchSessionState.Loaded:
+                    SendWhitelistToMod();
+                    MyAPIGateway.Utilities.RegisterMessageHandler(PluginMessageHandlerId, OnModReady);
                     //Executed after the world has loaded.
                     break;
                 case TorchSessionState.Unloading:
@@ -240,6 +247,7 @@ namespace ScriptManager
 
         private void SendWhitelistToMod()
         {
+            Log.Info("Transmitting Whitelist to mod!");
             var scriptTitles = new Dictionary<long, string>();
             var scriptBodies = new Dictionary<long, string>();
             foreach(var script in Whitelist)
@@ -250,7 +258,9 @@ namespace ScriptManager
                     scriptBodies.Add(script.Id, script.Code);
                 }
             }
-            MyAPIGateway.Utilities.SendModMessage(MessageHandlerId, new object[] { scriptTitles, scriptBodies });
+            var payload = new object[] { "ADD", scriptTitles, scriptBodies };
+                
+            MyAPIGateway.Utilities.SendModMessage(ModMessageHandlerId, payload);
         }
     }
 }
