@@ -22,16 +22,17 @@ namespace ScriptManagerClientMod
     [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
     class ScriptManagerCore : MySessionComponentBase
     {
-        const ushort ScriptManagerMessageHandlerId = 36235;
+        const ushort ModMessageHandlerId = 36235;
+        private long PluginMessageHandlerId = 59300040;
         public static ScriptManagerCore Instance { get; private set; }
 
         public override void BeforeStart()
         {
-            MyAPIGateway.Multiplayer.RegisterMessageHandler(ScriptManagerMessageHandlerId, ReceiveRemoteRequest);
+            MyAPIGateway.Multiplayer.RegisterMessageHandler(ModMessageHandlerId, ReceiveRemoteRequest);
             if (MyAPIGateway.Multiplayer.IsServer)
             {
-                MyAPIGateway.Utilities.RegisterMessageHandler(ScriptManagerMessageHandlerId, ReceiveWhitelistServer);
-                ReceiveWhitelistServer(null);
+                MyAPIGateway.Utilities.RegisterMessageHandler(ModMessageHandlerId, ReceiveWhitelistServer);
+                MyAPIGateway.Utilities.SendModMessage(PluginMessageHandlerId, null);
             }
             else
             {
@@ -46,35 +47,15 @@ namespace ScriptManagerClientMod
         // server only
         private static void ReceiveWhitelistServer(object data)
         {
-            // TODO: Replace dummy data by data received from plugin
-
-            CommonData.ScriptBodies.Add(100, "public Program { Echo(\"HEYHO\"); }");
-            CommonData.Scripts.Add(100, "Greeter");
-            return;
-            Broadcast(new WhitelistActionRequest(
-                MyAPIGateway.Multiplayer.MyId,
-                ListUpdateAction.ADD,
-                CommonData.Scripts));
-
-            return;
-
             if (!MyAPIGateway.Multiplayer.IsServer)
                 return;
-
-
             
-            MyLog.Default.Info("Received whitelist from plugin...");
-
+            Logger.Info("Received whitelist from plugin...");
             var errorMsg = "Received invalid whitelist data (server): {0}!";
             var dataList = data as object[];
-            if ( dataList == null)
+            if ( dataList == null || dataList.Length != 3)
             {
-                MyLog.Default.Error(errorMsg, "Expected list of objects");
-                return;
-            }
-            if (dataList.Length != 3)
-            {
-                MyLog.Default.Error(errorMsg, "Expected object list of length 3");
+                Logger.Error(errorMsg, string.Format("Expected object[3] (but {0})", (dataList == null ? "cast failed" : "had invalid length '" + dataList.Length + "'")));
                 return;
             }
             var actionStr = dataList[0] as string;
@@ -84,21 +65,23 @@ namespace ScriptManagerClientMod
                 || scriptTitles == null
                 ||  scriptBodies == null )
             {
-                MyLog.Default.Error(errorMsg, "First object needs to be a string and the 2nd and 3rd object need to be Dictionary<long, string>");
+                Logger.Error(errorMsg, "First object needs to be a string and the 2nd and 3rd object need to be of type Dictionary<long, string>");
                 return;
             }
             ListUpdateAction action = ListUpdateAction.ADD;
             if (!Enum.TryParse(actionStr, out action))
             {
-                MyLog.Default.Error(errorMsg, "Invalid action string");
+                Logger.Error(errorMsg, "Invalid action string");
                 return;
             }
 
             if(action == ListUpdateAction.ADD )
             {
+                Logger.Info("Adding scripts to whitelist...");
                 foreach(var k in scriptTitles.Keys )
                 {
-                    if (CommonData.ScriptBodies.ContainsKey(k) && k != -1)
+                    Logger.Info("    {0}: {1}", k, scriptTitles[k]);
+                    if (k != -1)
                     {
                         CommonData.Scripts[k] = scriptTitles[k];
                         CommonData.ScriptBodies[k] = scriptBodies[k];
@@ -107,8 +90,10 @@ namespace ScriptManagerClientMod
             }
             else if( action == ListUpdateAction.REMOVE )
             {
+                Logger.Info("Removing scripts to whitelist...");
                 foreach (var k in scriptTitles.Keys)
                 {
+                    Logger.Info("    {0}: {1}", k, scriptTitles[k]);
                     if (CommonData.Scripts.ContainsKey(k) && k != -1)
                     {
                         CommonData.Scripts.Remove(k);
@@ -130,26 +115,26 @@ namespace ScriptManagerClientMod
             var receivedScripts = data as Dictionary<long, string>;
             if ( receivedScripts == null)
             {
-                MyLog.Default.Error("Received invalid whitelist data!");
+                Logger.Error("Received invalid whitelist data!");
                 return;
             }
 
-            MyLog.Default.Info(string.Format("Whitelist received from server ({0} scripts):", receivedScripts.Count));
+            Logger.Info(string.Format("Whitelist received from server ({0} scripts):", receivedScripts.Count));
             foreach (var script in receivedScripts)
             {
-                MyLog.Default.Info("    " + script.Value);
+                Logger.Info("    " + script.Value);
                 CommonData.Scripts[script.Key] = script.Value;
             }
         }
 
         private static void ReceiveRemoteRequest(byte[] bytes)
         {
-            MyLog.Default.Info("Received remote request...");
+            Logger.Info("Received remote request...");
 
             try
             {
                 var request = MyAPIGateway.Utilities.SerializeFromBinary<RemoteRequest>(bytes);
-                MyLog.Default.Info("Successfully deserialized RemoteRequest.");
+                Logger.Info("Successfully deserialized RemoteRequest.");
                 // TODO: Remove check for request type
                 if (MyAPIGateway.Multiplayer.IsServer)
                 {
@@ -159,17 +144,17 @@ namespace ScriptManagerClientMod
                     }
                     else if( request.RequestType == RemoteRequestType.RECOMPILE)
                     {
-                        var serverRequest = request as RecompileRequest;
-                        if (serverRequest == null)
+                        var recompileRequest = request as RecompileRequest;
+                        if (recompileRequest == null)
                         {
-                            MyLog.Default.Error("No serialized data (expected RecompileRequest)!");
+                            Logger.Error("No serialized data (expected RecompileRequest)!");
                             return;
                         }
-                        RecompilePB(serverRequest.pbId);
+                        RecompilePB(recompileRequest.PbId, recompileRequest.ScriptId);
                     }
                     else
                     {
-                        MyLog.Default.Warning(string.Format("Invalid request type '{0}' to server!", request.RequestType));
+                        Logger.Warning(string.Format("Invalid request type '{0}' to server!", request.RequestType));
                     }
                      
 
@@ -181,20 +166,20 @@ namespace ScriptManagerClientMod
                         var clientRequest = request as WhitelistActionRequest;
                         if (clientRequest == null)
                         {
-                            MyLog.Default.Error("No serialized data (expected WhitelistActionRequest)!");
+                            Logger.Error("No serialized data (expected WhitelistActionRequest)!");
                         }
 
                         ReceiveWhitelistClient(clientRequest.WhitelistAction, clientRequest.Whitelist);
                     }
                     else
                     {
-                        MyLog.Default.Warning(string.Format("Invalid request type '{0}' to client!", request.RequestType));
+                        Logger.Warning(string.Format("Invalid request type '{0}' to client!", request.RequestType));
                     }
                 }
             }
             catch (Exception e)
             {
-                MyLog.Default.Error("Invalid packet data!\n {0}", e);
+                Logger.Error("Invalid packet data!\n {0}", e);
             }
         }
 
@@ -202,23 +187,23 @@ namespace ScriptManagerClientMod
         public static void SendToServer(RemoteRequest payload)
         {
             var bytes = MyAPIGateway.Utilities.SerializeToBinary(payload);
-            MyAPIGateway.Multiplayer.SendMessageToServer(ScriptManagerMessageHandlerId, bytes);
+            MyAPIGateway.Multiplayer.SendMessageToServer(ModMessageHandlerId, bytes);
         }
 
         // server only
-        private static void RecompilePB(long pbId)
+        private static void RecompilePB(long pbId, long scriptId)
         {
             if (!MyAPIGateway.Multiplayer.IsServer)
                 return;
 
             var pb = MyAPIGateway.Entities.GetEntityById(pbId) as IMyProgrammableBlock;
 
-            MyLog.Default.Info(string.Format("Received recompile request fro pb {0}", pb.CustomName));
+            Logger.Info(string.Format("Received recompilation request for pb '{0}'", pb.CustomName));
 
-            var scriptId = ScriptManagerGameLogic.GetActiveScript(pb);
+            ScriptManagerGameLogic.SetActiveScript(pb, scriptId);
             if(!CommonData.ScriptBodies.ContainsKey(scriptId))
             {
-                MyLog.Default.Error("Invalid script id in recompilation request!");
+                Logger.Error("Invalid script id in recompilation request!");
                 return;
             }
             pb.ProgramData = CommonData.ScriptBodies[scriptId];
@@ -230,7 +215,7 @@ namespace ScriptManagerClientMod
             if (!MyAPIGateway.Multiplayer.IsServer)
                 return;
 
-            MyLog.Default.Info("Sending whitelist to client...");
+            Logger.Info("Sending whitelist to client '{0}'...", clientId);
 
             var request = new WhitelistActionRequest(
                 MyAPIGateway.Multiplayer.MyId,
@@ -240,20 +225,21 @@ namespace ScriptManagerClientMod
         }
 
         // client only
-        public static void RequestPBRecompile(IMyProgrammableBlock pb)
+        public static void RequestPBRecompile(IMyProgrammableBlock pb, long scriptId)
         {
-            MyLog.Default.Info(string.Format("Requesting recompilation of {0}", pb.CustomName));
+            Logger.Info(string.Format("Requesting recompilation of {0} with scriptId {1}", pb.CustomName, scriptId));
 
             var request = new RecompileRequest(
                 MyAPIGateway.Multiplayer.MyId,
-                pb.EntityId);
+                pb.EntityId,
+                scriptId);
             SendToServer(request);
         }
 
         public static void SendToClient(ulong recipient, RemoteRequest payload)
         {
             var bytes = MyAPIGateway.Utilities.SerializeToBinary(payload);
-            MyAPIGateway.Multiplayer.SendMessageTo(ScriptManagerMessageHandlerId, bytes, recipient);
+            MyAPIGateway.Multiplayer.SendMessageTo(ModMessageHandlerId, bytes, recipient);
             //ReceiveRemoteRequest(bytes);
         }
 

@@ -76,14 +76,7 @@ Echo(""Main"");
                 }
             };
             ScriptsDropdown.Getter = GetActiveScript;
-            ScriptsDropdown.Setter = delegate (IMyTerminalBlock b, long l)
-            {
-                if (b.Storage == null)
-                    b.Storage = new MyModStorageComponent();
-                b.Storage[CommonData.GUID] = l.ToString();
-                //(b as IMyProgrammableBlock).ProgramData = Scripts[l].Code;
-                ScriptManagerCore.RequestPBRecompile(b as IMyProgrammableBlock);
-            };
+            ScriptsDropdown.Setter = SetActiveScript;
 
         }
 
@@ -105,14 +98,28 @@ Echo(""Main"");
 
         public static long GetActiveScript(IMyTerminalBlock pb)
         {
-            string activeScript;
             long l = NOSCRIPT.Key;
             if (pb.Storage != null && pb.Storage.ContainsKey(CommonData.GUID))
+            {
                 Int64.TryParse(pb.Storage[CommonData.GUID], out l);
+            }
             if ( CommonData.Scripts.ContainsKey(l) )
+            {
                 return l;
+            }
+            Logger.Info("No script with id '{0}' found in Whitelist.", l);
             return NOSCRIPT.Key;
         }
 
-    }
+        public static void SetActiveScript (IMyTerminalBlock pb, long l)
+        {
+            if (pb.Storage == null)
+                pb.Storage = new MyModStorageComponent();
+            pb.Storage[CommonData.GUID] = l.ToString();
+            //(b as IMyProgrammableBlock).ProgramData = Scripts[l].Code;
+            if(!MyAPIGateway.Multiplayer.IsServer)
+                ScriptManagerCore.RequestPBRecompile(pb as IMyProgrammableBlock, l);
+        }
+
+}
 }

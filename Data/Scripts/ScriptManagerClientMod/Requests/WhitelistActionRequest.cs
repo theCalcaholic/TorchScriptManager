@@ -11,10 +11,10 @@ namespace ScriptManagerClientMod
     public class WhitelistActionRequest : RemoteRequest
     {
 
-        [ProtoMember(5)]
+        [ProtoMember]
         public ListUpdateAction WhitelistAction = ListUpdateAction.ADD;
 
-        [ProtoMember(6)]
+        [ProtoMember]
         public Dictionary<long, string> Whitelist = new Dictionary<long, string>();
 
         public WhitelistActionRequest() { }

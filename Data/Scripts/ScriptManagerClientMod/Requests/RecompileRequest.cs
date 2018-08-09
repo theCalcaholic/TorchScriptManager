@@ -4,20 +4,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ProtoBuf;
+using System.ComponentModel;
 
 namespace ScriptManagerClientMod
 {
     [ProtoContract]
     class RecompileRequest : RemoteRequest
     {
-        [ProtoMember(5)]
-        public long pbId = 0;
+        [ProtoMember]
+        public long PbId = 0;
+
+        [ProtoMember]
+        [DefaultValue(-1)]
+        public long ScriptId = -1;
 
         public RecompileRequest() { }
 
-        public RecompileRequest(ulong sender, long programmableBlock) : base(sender, RemoteRequestType.RECOMPILE)
+        public RecompileRequest(ulong sender, long programmableBlock, long scriptId) : base(sender, RemoteRequestType.RECOMPILE)
         {
-            pbId = programmableBlock;
+            PbId = programmableBlock;
+            ScriptId = scriptId;
         }
     }
 }
