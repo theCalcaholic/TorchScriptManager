@@ -8,15 +8,15 @@ using ProtoBuf;
 namespace ScriptManagerClientMod
 {
     [ProtoContract]
-    [ProtoInclude(3, typeof(RecompileRequest))]
-    [ProtoInclude(4, typeof(WhitelistActionRequest))]
+    [ProtoInclude(1, typeof(RecompileRequest))]
+    [ProtoInclude(2, typeof(WhitelistActionRequest))]
     public class RemoteRequest
     {
 
-        [ProtoMember(1)]
+        [ProtoMember]
         public RemoteRequestType RequestType;
 
-        [ProtoMember(2)]
+        [ProtoMember]
         public ulong Sender = 0;
 
         public RemoteRequest() { }

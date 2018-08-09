@@ -117,6 +117,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Logger.cs" />
     <Compile Include="Requests\RemoteRequest.cs" />
     <Compile Include="ScriptManagerCore.cs" />
     <Compile Include="Requests\RecompileRequest.cs" />

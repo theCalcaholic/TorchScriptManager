@@ -1,0 +1,13 @@
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<EntityComponents>
+		<EntityComponent xsi:type="MyObjectBuilder_ModStorageComponentDefinition">
+		  <Id>
+			<TypeId>ModStorageComponent</TypeId>
+			<SubtypeId>ScriptManagerClientMod</SubtypeId>
+		  </Id>
+		  <RegisteredStorageGuids>
+			<guid>5f35403d-2150-4d83-9ef8-3510f25bbdf3</guid>
+		  </RegisteredStorageGuids>
+		</EntityComponent>
+	</EntityComponents>
+</Definitions>
