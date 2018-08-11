@@ -218,11 +218,12 @@ namespace ScriptManager
             switch (newState)
             {
                 case TorchSessionState.Loading:
-                    MyAPIGateway.Session.Mods.Add(
-                        new MyObjectBuilder_Checkpoint.ModItem(
-                            "1470445959.sbm", 
-                            1470445959, 
-                            "ScriptManager Client Mod"));
+                    if( Config.Enabled )
+                        MyAPIGateway.Session.Mods.Add(
+                            new MyObjectBuilder_Checkpoint.ModItem(
+                                "1470445959.sbm", 
+                                1470445959, 
+                                "ScriptManager Client Mod"));
                     //Executed before the world loads.
                     break;
                 case TorchSessionState.Loaded:
