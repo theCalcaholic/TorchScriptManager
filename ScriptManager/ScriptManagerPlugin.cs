@@ -115,6 +115,13 @@ namespace ScriptManager
         {
             if (!Instance.Config.Enabled || program == null || program == "")
                 return true;
+
+            // exclude npc factions
+            var factionTag = (__instance as MyProgrammableBlock).GetOwnerFactionTag();
+            var faction = MyAPIGateway.Session.Factions.TryGetFactionByTag(factionTag);
+            if (faction.IsEveryoneNpc() && !faction.AcceptHumans)
+                return true;
+
             program = program.Replace("\r", "");
             var scriptHash = GetMD5Hash(program);
             var comparer = StringComparer.OrdinalIgnoreCase;
