@@ -131,55 +131,54 @@ namespace ScriptManagerClientMod
         {
             Logger.Info("Received remote request...");
 
-            try
-            {
-                var request = MyAPIGateway.Utilities.SerializeFromBinary<RemoteRequest>(bytes);
-                Logger.Info("Successfully deserialized RemoteRequest.");
-                // TODO: Remove check for request type
-                if (MyAPIGateway.Multiplayer.IsServer)
-                {
-                    if ( request.RequestType == RemoteRequestType.CLIENT_REGISTRATION)
-                    {
-                        SendWhitelistToClient(request.Sender);
-                    }
-                    else if( request.RequestType == RemoteRequestType.RECOMPILE)
-                    {
-                        var recompileRequest = request as RecompileRequest;
-                        if (recompileRequest == null)
-                        {
-                            Logger.Error("No serialized data (expected RecompileRequest)!");
-                            return;
-                        }
-                        RecompilePB(recompileRequest.PbId, recompileRequest.ScriptId);
-                    }
-                    else
-                    {
-                        Logger.Warning(string.Format("Invalid request type '{0}' to server!", request.RequestType));
-                    }
-                     
+            var request = MyAPIGateway.Utilities.SerializeFromBinary<RemoteRequest>(bytes);
 
+            if ( request == null )
+            {
+                Logger.Error("Invalid packet data received!\nCould not parse RemoteRequest");
+                return;
+            }
+            Logger.Info("Successfully deserialized RemoteRequest.");
+            if (MyAPIGateway.Multiplayer.IsServer)
+            {
+                if (request.RequestType == RemoteRequestType.CLIENT_REGISTRATION)
+                {
+                    SendWhitelistToClient(request.Sender);
+                }
+                else if (request.RequestType == RemoteRequestType.RECOMPILE)
+                {
+                    var recompileRequest = request as RecompileRequest;
+                    if (recompileRequest == null)
+                    {
+                        Logger.Error("No serialized data (expected RecompileRequest)!");
+                        return;
+                    }
+                    RecompilePB(recompileRequest.PbId, recompileRequest.ScriptId);
                 }
                 else
                 {
-                    if (request.RequestType == RemoteRequestType.WHITELIST_ACTION)
-                    {
-                        var clientRequest = request as WhitelistActionRequest;
-                        if (clientRequest == null)
-                        {
-                            Logger.Error("No serialized data (expected WhitelistActionRequest)!");
-                        }
-
-                        ReceiveWhitelistClient(clientRequest.WhitelistAction, clientRequest.Whitelist);
-                    }
-                    else
-                    {
-                        Logger.Warning(string.Format("Invalid request type '{0}' to client!", request.RequestType));
-                    }
+                    Logger.Warning(string.Format("Invalid request type '{0}' to server!", request.RequestType));
                 }
+                     
+
             }
-            catch (Exception e)
+            else
             {
-                Logger.Error("Invalid packet data!\n {0}", e);
+                if (request.RequestType == RemoteRequestType.WHITELIST_ACTION)
+                {
+                    var clientRequest = request as WhitelistActionRequest;
+                    if (clientRequest == null)
+                    {
+                        Logger.Error("No serialized data (expected WhitelistActionRequest)!");
+                        return;
+                    }
+
+                    ReceiveWhitelistClient(clientRequest.WhitelistAction, clientRequest.Whitelist);
+                }
+                else
+                {
+                    Logger.Warning(string.Format("Invalid request type '{0}' to client!", request.RequestType));
+                }
             }
         }
 
