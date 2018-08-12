@@ -119,7 +119,7 @@ namespace ScriptManager
             // exclude npc factions
             var factionTag = (__instance as MyProgrammableBlock).GetOwnerFactionTag();
             var faction = MyAPIGateway.Session.Factions.TryGetFactionByTag(factionTag);
-            if (faction.IsEveryoneNpc() && !faction.AcceptHumans)
+            if (faction != null && faction.IsEveryoneNpc() && !faction.AcceptHumans)
                 return true;
 
             program = program.Replace("\r", "");
