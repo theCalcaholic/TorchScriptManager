@@ -93,7 +93,6 @@ namespace ScriptManager.Ui
         public int InstallCount
         {
             get => ProgrammableBlocks.Count;
-            set { OnPropertyChanged(); }
         }
 
         private ObservableCollection<long> _programmableBlocks = new ObservableCollection<long>();

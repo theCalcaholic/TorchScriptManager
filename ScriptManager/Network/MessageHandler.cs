@@ -30,9 +30,10 @@ namespace ScriptManager.Network
             if (initialized)
                 return;
 
-            ScriptManagerPlugin.Instance.Config.Whitelist.CollectionChanged += UpdateWhitelist;
+            ScriptManagerPlugin.Instance.Config.WhitelistChanged += UpdateWhitelist;
             foreach (var script in ScriptManagerPlugin.Instance.Config.Whitelist)
-                scripts[script.Id] = script.Name;
+                if( script.Enabled )
+                    scripts[script.Id] = script.Name;
 
             initialized = true;
 

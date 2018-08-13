@@ -18,6 +18,12 @@ namespace ScriptManager.Ui
     {
         private bool _enabled = true;
 
+        [XmlIgnore]
+        public NotifyCollectionChangedEventHandler WhitelistChanged;
+
+        [XmlIgnore]
+        public Dictionary<long, ScriptEntry> RunningScripts = new Dictionary<long, ScriptEntry>();
+
         public bool Enabled
         {
             get => _enabled;
@@ -39,11 +45,22 @@ namespace ScriptManager.Ui
         public ScriptManagerConfig() : base()
         {
             Whitelist.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => {
+                if( e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Replace)
+                    foreach(var item in e.NewItems)
+                        (item as ScriptEntry).PropertyChanged += (_, propertyChangedEv) =>
+                        {
+                            if( propertyChangedEv.PropertyName == nameof(ScriptEntry.Name))
+                            OnWhitelistChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
+                        };
                 OnPropertyChanged();
+                OnWhitelistChanged(e);
             };
+
         }
 
-        [XmlIgnore]
-        public Dictionary<long, ScriptEntry> RunningScripts = new Dictionary<long, ScriptEntry>();
+        private void OnWhitelistChanged(NotifyCollectionChangedEventArgs e)
+        {
+            WhitelistChanged?.Invoke(this, e);
+        }
     }
 }
