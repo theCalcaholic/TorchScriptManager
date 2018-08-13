@@ -49,6 +49,7 @@ namespace ScriptManager
     public class ScriptManagerPlugin : TorchPluginBase, IWpfPlugin
     {
         //Use this to write messages to the Torch log.
+        public const long ModId = 1470445959;
         private static readonly Logger Log = LogManager.GetLogger("ScriptManager");
         private TorchSessionManager _sessionManager;
 
@@ -89,10 +90,31 @@ namespace ScriptManager
                 _sessionManager.SessionStateChanged += OnSessionStateChanged;
             var patchMgr = torch.Managers.GetManager<PatchManager>();
             var patchContext = patchMgr.AcquireContext();
+            //PatchModlist(patchContext);
             PatchPB(patchContext);     //apply hooks
             patchMgr.Commit();
             //Your init code here, the game is not initialized at this point.
             Instance = this;
+        }
+
+        static public void PatchModlist(PatchContext context)
+        {
+            var sessionGetWorld = typeof(MySession).GetMethod(nameof(MySession.GetWorld));
+            if (sessionGetWorld == null)
+                throw new InvalidOperationException("Couldn't find method MySession.GetWorld!");
+
+            context.GetPattern(sessionGetWorld).Suffixes.Add(typeof(ScriptManagerPlugin).GetMethod(nameof(SuffixGetWorld),
+                BindingFlags.Static | BindingFlags.NonPublic));
+        }
+
+        static private void SuffixGetWorld(ref MyObjectBuilder_World __result)
+        {
+            //copy this list so mods added here don't propagate up to the real session
+            __result.Checkpoint.Mods = __result.Checkpoint.Mods.ToList();
+
+            if( Instance.Config.Enabled )
+                __result.Checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(ModId));
+
         }
 
         static public void PatchPB(PatchContext context)
