@@ -10,19 +10,21 @@ using TViews = Torch.Views;
 using Torch.Server;
 using Torch.Commands;
 using System.ComponentModel;
+using NLog;
+using System.Xml.Serialization;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace ScriptManager
 {
     public class ScriptEntry : ViewModel
     {
+        private static Logger Log = LogManager.GetLogger("ScriptManager");
         private bool _enabled;
+        private static long nextId = 0;
 
         private long _id;
 
-        public ScriptEntry()
-        {
-            Id = nextId++;
-        }
         public bool Enabled
         {
             get => _enabled;
@@ -107,6 +109,7 @@ namespace ScriptManager
 
         public ScriptEntry()
         {
+            Id = nextId++;
             _programmableBlocks.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => {
                 OnPropertyChanged("InstallCount");
             };
