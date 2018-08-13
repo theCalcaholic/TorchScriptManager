@@ -15,7 +15,7 @@ using System.Xml.Serialization;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
-namespace ScriptManager
+namespace ScriptManager.Ui
 {
     public class ScriptEntry : ViewModel
     {

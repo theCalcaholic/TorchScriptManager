@@ -12,7 +12,7 @@ using System.Xml.Serialization;
 using NLog;
 using System.ComponentModel;
 
-namespace ScriptManager
+namespace ScriptManager.Ui
 {
     public class ScriptManagerConfig : ViewModel
     {

@@ -9,7 +9,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using NLog;
 
-namespace ScriptManager
+namespace ScriptManager.Ui
 {
     public class TextEditor : Window
     {
@@ -21,7 +21,6 @@ namespace ScriptManager
         private Label NotificationBox;
         private Grid TitleGrid;
         private Grid RootContainer;
-        private double staticElementsHeight;
         public delegate void ScriptSaveEventHandler(object sender, ScriptSaveEventArgs e);
         public event ScriptSaveEventHandler SaveAndClose;
         private static readonly Logger Log = LogManager.GetLogger("ScriptManager");
@@ -95,7 +94,6 @@ namespace ScriptManager
             TitleGrid.Children.Add(TitleLabel);
             TitleGrid.Children.Add(TitleEditor);
             Grid.SetColumn(TitleEditor, 2);
-            staticElementsHeight = 0D;
             //Height = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height * 0.8;
             MinHeight = 400;
 

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScriptManagerClientMod
+namespace ScriptManager.ClientMod
 {
     public class ScriptInfo
     {

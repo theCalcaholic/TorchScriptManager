@@ -21,6 +21,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>..\bin\x64\Release\</OutputPath>
@@ -153,14 +154,15 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ScriptEntry.cs" />
-    <Compile Include="ScriptManagerConfig.cs" />
+    <Compile Include="Network\MessageHandler.cs" />
+    <Compile Include="UI\ScriptEntry.cs" />
+    <Compile Include="UI\ScriptManagerConfig.cs" />
     <Compile Include="ScriptManagerPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ui\ScriptManagerUserControl.xaml.cs">
+    <Compile Include="UI\ScriptManagerUserControl.xaml.cs">
       <DependentUpon>ScriptManagerUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ui\TextEditor.cs" />
+    <Compile Include="UI\TextEditor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.xml">
@@ -171,9 +173,14 @@
     <None Include="EnsureSymlink.ps1" />
     <None Include="ZipOutput.ps1" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <Page Include="ui\ScriptManagerUserControl.xaml">
+    <ProjectReference Include="..\ScriptManagerCLientMod\Data\Scripts\ScriptManagerClientMod\ScriptManagerClientMod.csproj">
+      <Project>{53599ba2-d955-4ae8-89d1-14290d6c1934}</Project>
+      <Name>ScriptManagerClientMod</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="UI\ScriptManagerUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

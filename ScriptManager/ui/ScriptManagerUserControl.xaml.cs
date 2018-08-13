@@ -16,8 +16,9 @@ using System.ComponentModel;
 using System.Windows.Markup;
 using Torch.Views;
 using NLog;
+using ScriptManager;
 
-namespace ScriptManager
+namespace ScriptManager.Ui
 {
     /// <summary>
     /// Interaction logic for ScriptmanagerUserControl.xaml

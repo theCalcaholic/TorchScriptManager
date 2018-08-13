@@ -15,17 +15,17 @@ using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Utils;
 using VRage.Network;
+using ScriptManager.ClientMod.Common;
 
 
-namespace ScriptManagerClientMod
+
+namespace ScriptManager.ClientMod
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_MyProgrammableBlock), false, new string[] { "SmallProgrammableBlock", "LargeProgrammableBlock" })]
     public class ScriptManagerGameLogic : MyGameLogicComponent
     {
         IMyTerminalControlCombobox ScriptsDropdown;
         static bool Initialized = false;
-        static KeyValuePair<long, string> NOSCRIPT =
-            new KeyValuePair<long, string>(-1L, "NONE");
 
         public override void OnAddedToContainer()
         {
@@ -66,7 +66,7 @@ Echo(""Main"");
             MyAPIGateway.TerminalControls.AddControl<IMyProgrammableBlock>(ScriptsDropdown);
 
             ScriptsDropdown.ComboBoxContent = (List<MyTerminalControlComboBoxItem> items) => {
-                foreach (var script in CommonData.Scripts)
+                foreach (var script in WhitelistData.Scripts)
                 {
                     items.Add(new MyTerminalControlComboBoxItem()
                     {
@@ -96,30 +96,31 @@ Echo(""Main"");
             };
         }
 
-        public static long GetActiveScript(IMyTerminalBlock pb)
+
+        private static long GetActiveScript(IMyTerminalBlock pb)
         {
-            long l = NOSCRIPT.Key;
-            if (pb.Storage != null && pb.Storage.ContainsKey(CommonData.GUID))
+            long l = Config.NOSCRIPT.Key;
+            if (pb.Storage != null && pb.Storage.ContainsKey(Config.GUID))
             {
-                Int64.TryParse(pb.Storage[CommonData.GUID], out l);
+                Int64.TryParse(pb.Storage[Config.GUID], out l);
             }
-            if ( CommonData.Scripts.ContainsKey(l) )
+            if (WhitelistData.Scripts.ContainsKey(l))
             {
                 return l;
             }
-            Logger.Info("No script with id '{0}' found in Whitelist.", l);
-            return NOSCRIPT.Key;
+            ModLogger.Info("No script with id '{0}' found in Whitelist.", l);
+            return Config.NOSCRIPT.Key;
         }
 
-        public static void SetActiveScript (IMyTerminalBlock pb, long l)
+        private static void SetActiveScript(IMyTerminalBlock pb, long l)
         {
             if (pb.Storage == null)
                 pb.Storage = new MyModStorageComponent();
-            pb.Storage[CommonData.GUID] = l.ToString();
+            pb.Storage[Config.GUID] = l.ToString();
             //(b as IMyProgrammableBlock).ProgramData = Scripts[l].Code;
-            if(!MyAPIGateway.Multiplayer.IsServer)
+            if (!MyAPIGateway.Multiplayer.IsServer)
                 ScriptManagerCore.RequestPBRecompile(pb as IMyProgrammableBlock, l);
         }
 
-}
+    }
 }

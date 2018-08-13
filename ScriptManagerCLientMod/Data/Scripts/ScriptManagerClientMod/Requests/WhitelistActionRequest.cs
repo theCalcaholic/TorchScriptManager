@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ProtoBuf;
 
-namespace ScriptManagerClientMod
+namespace ScriptManager.ClientMod.Requests
 {
     [ProtoContract]
     public class WhitelistActionRequest : RemoteRequest

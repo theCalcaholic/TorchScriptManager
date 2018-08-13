@@ -43,13 +43,15 @@ using System.Security.Cryptography;
 using Sandbox.Engine.Utils;
 using Sandbox.ModAPI;
 using Sandbox.Game.World;
+using ScriptManager.Ui;
+using ScriptManager.Network;
+using Common = ScriptManager.ClientMod.Common;
 
 namespace ScriptManager
 {
     public class ScriptManagerPlugin : TorchPluginBase, IWpfPlugin
     {
         //Use this to write messages to the Torch log.
-        public const long ModId = 1470445959;
         private static readonly Logger Log = LogManager.GetLogger("ScriptManager");
         private TorchSessionManager _sessionManager;
 
@@ -57,8 +59,8 @@ namespace ScriptManager
 
         private ScriptManagerUserControl _control;
         private bool IsClientModReady = false;
-        private long ModMessageHandlerId = 36235;
-        private long PluginMessageHandlerId = 59300040;
+        //private long ModMessageHandlerId = 36235;
+        //private long PluginMessageHandlerId = 59300040;
 
         public ScriptManagerConfig Config => _config?.Data;
 
@@ -80,6 +82,7 @@ namespace ScriptManager
         public override void Init(ITorchBase torch)
         {
             base.Init(torch);
+
             _config = Persistent<ScriptManagerConfig>.Load(Path.Combine(StoragePath, "ScriptManager.cfg"));
             
             md5Hash = MD5.Create();
@@ -90,11 +93,13 @@ namespace ScriptManager
                 _sessionManager.SessionStateChanged += OnSessionStateChanged;
             var patchMgr = torch.Managers.GetManager<PatchManager>();
             var patchContext = patchMgr.AcquireContext();
-            //PatchModlist(patchContext);
+            PatchModlist(patchContext);
             PatchPB(patchContext);     //apply hooks
             patchMgr.Commit();
             //Your init code here, the game is not initialized at this point.
             Instance = this;
+
+            MessageHandler.Init();
         }
 
         static public void PatchModlist(PatchContext context)
@@ -113,7 +118,7 @@ namespace ScriptManager
             __result.Checkpoint.Mods = __result.Checkpoint.Mods.ToList();
 
             if( Instance.Config.Enabled )
-                __result.Checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(ModId));
+                __result.Checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(ClientMod.Common.Config.MOD_ID));
 
         }
 
@@ -253,17 +258,18 @@ namespace ScriptManager
             switch (newState)
             {
                 case TorchSessionState.Loading:
-                    if( Config.Enabled )
+                    /*if( Config.Enabled )
                         MyAPIGateway.Session.Mods.Add(
                             new MyObjectBuilder_Checkpoint.ModItem(
                                 "1470445959.sbm", 
                                 1470445959, 
-                                "ScriptManager Client Mod"));
+                                "ScriptManager Client Mod"));*/
                     //Executed before the world loads.
                     break;
                 case TorchSessionState.Loaded:
-                    SendWhitelistToMod();
-                    MyAPIGateway.Utilities.RegisterMessageHandler(PluginMessageHandlerId, OnModReady);
+                    MessageHandler.SetupMessaging();
+                    //SendWhitelistToMod();
+                    //MyAPIGateway.Utilities.RegisterMessageHandler(Common.Config.MOD_ID, OnModReady);
                     //Executed after the world has loaded.
                     break;
                 case TorchSessionState.Unloading:
@@ -296,7 +302,7 @@ namespace ScriptManager
             }
             var payload = new object[] { "ADD", scriptTitles, scriptBodies };
                 
-            MyAPIGateway.Utilities.SendModMessage(ModMessageHandlerId, payload);
+            //MyAPIGateway.Utilities.SendModMessage(ModMessageHandlerId, payload);
         }
     }
 }

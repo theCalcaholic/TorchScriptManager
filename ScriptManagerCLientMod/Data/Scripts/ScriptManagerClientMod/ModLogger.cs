@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using VRage.Utils;
 
-namespace ScriptManagerClientMod
+namespace ScriptManager.ClientMod
 {
-    public static class Logger
+    public static class ModLogger
     {
-        static string Prefix = "[ScriptManagerClientMod] ";
+        private static readonly string Prefix = "[ScriptManagerClientMod] ";
         public static void Info(string message)
         {
             MyLog.Default.Info(Prefix + message);

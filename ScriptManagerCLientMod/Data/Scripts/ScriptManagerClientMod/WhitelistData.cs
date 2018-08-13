@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ScriptManagerClientMod
+namespace ScriptManager.ClientMod
 {
-    static class CommonData
+    public class WhitelistData
     {
         public static Dictionary<long, string> Scripts = new Dictionary<long, string>
         {
@@ -16,7 +16,5 @@ namespace ScriptManagerClientMod
         {
             { -1, "" }
         };
-        public static Guid GUID { get; } = new Guid("5f35403d-2150-4d83-9ef8-3510f25bbdf3");
-
     }
 }
