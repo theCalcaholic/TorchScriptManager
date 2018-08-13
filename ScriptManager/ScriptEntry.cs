@@ -10,15 +10,11 @@ using TViews = Torch.Views;
 using Torch.Server;
 using Torch.Commands;
 using System.ComponentModel;
-using NLog;
 
 namespace ScriptManager
 {
     public class ScriptEntry : ViewModel
     {
-        private static readonly Logger Log = LogManager.GetLogger("Scriptmanager");
-        private static long nextId = 0;
-
         private bool _enabled;
 
         private long _id;
@@ -90,5 +86,32 @@ namespace ScriptManager
                 OnPropertyChanged();
             }
         }
+
+        [XmlIgnore]
+        public int InstallCount
+        {
+            get => ProgrammableBlocks.Count;
+            set { OnPropertyChanged(); }
+        }
+
+        private ObservableCollection<long> _programmableBlocks = new ObservableCollection<long>();
+        [XmlIgnore]
+        public ObservableCollection<long> ProgrammableBlocks
+        {
+            get => _programmableBlocks;
+            set {
+                SetValue(ref _programmableBlocks, value);
+                OnPropertyChanged("InstallCount");
+            }
+        }
+
+        public ScriptEntry()
+        {
+            _programmableBlocks.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => {
+                OnPropertyChanged("InstallCount");
+            };
+        }
+
+        
     }
 }

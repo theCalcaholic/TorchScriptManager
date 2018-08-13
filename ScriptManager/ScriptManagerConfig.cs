@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Torch;
 using Torch.Views;
 using System.Xml.Serialization;
+using NLog;
+using System.ComponentModel;
 
 namespace ScriptManager
 {
@@ -36,7 +38,12 @@ namespace ScriptManager
 
         public ScriptManagerConfig() : base()
         {
-            Whitelist.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => { OnPropertyChanged(); };
+            Whitelist.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => {
+                OnPropertyChanged();
+            };
         }
+
+        [XmlIgnore]
+        public Dictionary<long, ScriptEntry> RunningScripts = new Dictionary<long, ScriptEntry>();
     }
 }
