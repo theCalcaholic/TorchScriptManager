@@ -69,11 +69,7 @@ namespace ScriptManager
         }
 
         public static ScriptManagerPlugin Instance { get; private set; }
-
-        /// <inheritdoc />
-        //public UserControl GetControl() {
-        //    return _control ?? (_control = new ScriptManagerControl(this));
-        //}
+        
         public UserControl GetControl() => _control ?? (_control = new ScriptManagerUserControl() { DataContext = Config, Plugin = this });
 
         /// <inheritdoc />
@@ -87,7 +83,7 @@ namespace ScriptManager
             //    _sessionManager.SessionStateChanged += SessionChanged;
             var patchMgr = torch.Managers.GetManager<PatchManager>();
             var patchContext = patchMgr.AcquireContext();
-            ScriptManagerPlugin.PatchPB(patchContext);     //apply hooks
+            PatchPB(patchContext);     //apply hooks
             patchMgr.Commit();
             //Your init code here, the game is not initialized at this point.
             Instance = this;
@@ -111,10 +107,18 @@ namespace ScriptManager
                 return true;
 
             // exclude npc factions
-            var factionTag = (__instance as MyProgrammableBlock).GetOwnerFactionTag();
+            var pb = (__instance as MyProgrammableBlock);
+            var factionTag = pb.GetOwnerFactionTag();
             var faction = MyAPIGateway.Session.Factions.TryGetFactionByTag(factionTag);
             if (faction != null && faction.IsEveryoneNpc() && !faction.AcceptHumans)
                 return true;
+
+            if (Instance.Config.RunningScripts.ContainsKey(pb.EntityId))
+            {
+                Instance.Config.RunningScripts[pb.EntityId].ProgrammableBlocks.Remove(pb.EntityId);
+                Instance.Config.RunningScripts.Remove(pb.EntityId);
+            }
+
 
             program = program.Replace("\r", "");
             var scriptHash = GetMD5Hash(program);
@@ -123,6 +127,8 @@ namespace ScriptManager
             {
                 if (script.Enabled && comparer.Compare(scriptHash, script.MD5Hash) == 0)
                 {
+                    script.ProgrammableBlocks.Add(pb.EntityId);
+                    Instance.Config.RunningScripts[pb.EntityId] = script;
                     Log.Info("Script found on whitelist! Compiling...");
                     return true;
                 }
@@ -186,7 +192,7 @@ namespace ScriptManager
 
         static public string GetMD5Hash(string input)
         {
-            byte[] data = ScriptManagerPlugin.md5Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
+            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
             var sBuilder = new StringBuilder();
 
             for( int i = 0; i < data.Length; i++ )
