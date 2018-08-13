@@ -21,8 +21,7 @@
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding Enabled, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
                 <DataGridTextColumn Header="Script Name" Binding="{Binding Name, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-                <DataGridTextColumn IsReadOnly="True" Header="MD5 Hash" Binding="{Binding MD5Hash, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-                <DataGridTextColumn IsReadOnly="True" Header="Times Installed" Binding="{Binding InstallCount, NotifyOnTargetUpdated=True,UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Width="*" IsReadOnly="True" Header="MD5 Hash" Binding="{Binding MD5Hash, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
             </DataGrid.Columns>
         </DataGrid>
         <Grid x:Name="WhitelistControls" Margin="12 0">
@@ -40,7 +39,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Button Grid.Column="4" Click="OpenAddFromCodeDialog">Add from Source Code</Button>
+            <Button Grid.Column="4" Click="OpenAddFromCodeDialog">Add from Code</Button>
             <Button Grid.Row="0" Grid.Column="4" Click="OpenAddFromWorkshopDialog" IsEnabled="False" Visibility="Hidden" ToolTip="Work In Progress">Add from Workshop [WIP]</Button>
             <Button Click="EditSelectedScript" 
                     IsEnabled="{Binding ElementName=WhitelistTable, Path=SelectedItems.Count}">
