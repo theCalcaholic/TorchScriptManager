@@ -36,15 +36,15 @@ namespace ScriptManager.Ui
 
         public void OpenAddFromCodeDialog(object sender, RoutedEventArgs e)
         {
-            var editor = new TextEditor();
+            var editor = new ScriptEditor();
 
-            editor.SaveAndClose += (object s, TextEditor.ScriptSaveEventArgs scriptData) =>
+            editor.SaveAndClose += (object s, ScriptEditor.ScriptSaveEventArgs scriptData) =>
             {
-                var scriptCode = scriptData.Code.Replace("\r", "");
+                var scriptCode = scriptData.Script.Code.Replace("\r", "");
                 var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
                 var scriptEntry = new ScriptEntry()
                 {
-                    Name = scriptData.Title,
+                    Name = scriptData.Script.Name,
                     MD5Hash = scriptHash,
                     Code = scriptCode,
                     Enabled = false
@@ -56,7 +56,7 @@ namespace ScriptManager.Ui
         }
         public void OpenAddFromWorkshopDialog(object sender, RoutedEventArgs e)
         {
-            Log.Info("Open AddFromWorkshop Dialog..");
+            
         }
 
         private void WhitelistUpdated(object sender, DataTransferEventArgs e)
@@ -66,15 +66,15 @@ namespace ScriptManager.Ui
 
         private void EditSelectedScript(object sender, RoutedEventArgs e)
         {
-            var editor = new TextEditor();
+            var editor = new ScriptEditor();
             var script = WhitelistTable.SelectedItem as ScriptEntry;
             editor.LoadScript(script);
 
-            editor.SaveAndClose += (object s, TextEditor.ScriptSaveEventArgs scriptData) =>
+            editor.SaveAndClose += (object s, ScriptEditor.ScriptSaveEventArgs scriptData) =>
             {
-                var scriptCode = scriptData.Code.Replace("\r", "");
+                var scriptCode = scriptData.Script.Code.Replace("\r", "");
                 var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
-                script.Name = scriptData.Title;
+                script.Name = scriptData.Script.Name;
                 script.Code = scriptCode;
                 script.MD5Hash = scriptHash;
                 WhitelistUpdated(this, null);

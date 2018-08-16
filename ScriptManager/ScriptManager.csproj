@@ -155,14 +155,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Network\MessageHandler.cs" />
-    <Compile Include="UI\ScriptEntry.cs" />
-    <Compile Include="UI\ScriptManagerConfig.cs" />
+    <Compile Include="Ui\AddFromWorkshopDialog.xaml.cs">
+      <DependentUpon>AddFromWorkshopDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Ui\MultiplyConverter.cs" />
+    <Compile Include="Ui\ScriptEntry.cs" />
+    <Compile Include="Ui\ScriptManagerConfig.cs" />
     <Compile Include="ScriptManagerPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\ScriptManagerUserControl.xaml.cs">
+    <Compile Include="Ui\ScriptManagerUserControl.xaml.cs">
       <DependentUpon>ScriptManagerUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\TextEditor.cs" />
+    <Compile Include="Ui\ScriptEditor.xaml.cs">
+      <DependentUpon>ScriptEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WorkshopHacks.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -181,7 +187,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="UI\ScriptManagerUserControl.xaml">
+    <Page Include="Ui\AddFromWorkshopDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Ui\ScriptManagerUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Ui\ScriptEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

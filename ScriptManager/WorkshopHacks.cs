@@ -103,21 +103,11 @@ namespace ScriptManager
 
         public static async Task<string> DownloadScriptAsync(MyWorkshop.SubscribedItem scriptInfo)
         {
-            /*if( IsModUpToDateBlocking(scriptInfo) )
-            {
-                Log.Info($"Script {scriptInfo.Title} is up to date.");
-                return null;
-            }*/
-
             var taskCompletionSrc = new TaskCompletionSource<string>();
             var task = taskCompletionSrc.Task;
-
-            Log.Info($"Downloading script '{scriptInfo.Title}'...");
-
             string scriptPath = Path.Combine(ScriptManagerPlugin.ScriptsPath, scriptInfo.PublishedFileId + ".sbs");
-            Directory.CreateDirectory(ScriptManagerPlugin.ScriptsPath);
-            var gameService = MyServiceManager.Instance.GetService<IMyGameService>();
-            gameService.DownloadModForServer(scriptInfo.PublishedFileId, scriptPath, (Action<bool>)(success =>
+
+            void evaluateResult(bool success)
             {
                 Log.Info("Download completed!");
                 if (!success)
@@ -126,21 +116,7 @@ namespace ScriptManager
                     return;
                 }
 
-                string text = null;
-
-                foreach (string file in MyFileSystem.GetFiles(scriptPath, ".cs", MySearchOption.AllDirectories))
-                {
-                    if (MyFileSystem.FileExists(file))
-                    {
-                        using (Stream stream = MyFileSystem.OpenRead(file))
-                        {
-                            using (StreamReader streamReader = new StreamReader(stream))
-                            {
-                                text = streamReader.ReadToEnd();
-                            }
-                        }
-                    }
-                }
+                var text = ReadScriptFromFile(scriptPath);
 
                 if (text == null)
                 {
@@ -150,9 +126,62 @@ namespace ScriptManager
                 }
 
                 taskCompletionSrc.SetResult(text);
-            }));
+            };
+
+            if (IsScriptUpToDate(scriptPath, scriptInfo, scriptInfo.FileSize))
+            {
+                Log.Info($"Script {scriptInfo.Title} is already up to date.");
+                evaluateResult(true);
+            }
+            else
+            {
+
+                Log.Info($"Downloading script '{scriptInfo.Title}'...");
+
+                Directory.CreateDirectory(ScriptManagerPlugin.ScriptsPath);
+                var gameService = MyServiceManager.Instance.GetService<IMyGameService>();
+                gameService.DownloadModForServer(scriptInfo.PublishedFileId, scriptPath, evaluateResult);
+            }
 
             return await task;
+        }
+
+        private static string ReadScriptFromFile(string scriptPath)
+        {
+            string text = null;
+
+            foreach (string file in MyFileSystem.GetFiles(scriptPath, ".cs", MySearchOption.AllDirectories))
+            {
+                if (MyFileSystem.FileExists(file))
+                {
+                    using (Stream stream = MyFileSystem.OpenRead(file))
+                    {
+                        using (StreamReader streamReader = new StreamReader(stream))
+                        {
+                            text = streamReader.ReadToEnd();
+                        }
+                    }
+                }
+            }
+            return text;
+        }
+
+        private static bool IsScriptUpToDate(string fullPath, MyWorkshop.SubscribedItem script, long expectedFileSize = -1)
+        {
+            if( expectedFileSize > 0L )
+            {
+                if (!File.Exists(fullPath))
+                    return false;
+
+                using (FileStream fileStream = File.OpenRead(fullPath))
+                {
+                    if (fileStream.Length != expectedFileSize)
+                        return false;
+                }
+
+            }
+
+            return File.GetLastWriteTimeUtc(fullPath).ToUnixTimestamp() >= script.TimeUpdated;
         }
     }
 }
