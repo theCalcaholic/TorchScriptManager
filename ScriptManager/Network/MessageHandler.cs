@@ -15,6 +15,7 @@ using ScriptManager.ClientMod.Requests;
 using ScriptManager.ClientMod.Common;
 using Sandbox.Game.EntityComponents;
 using ScriptManager.Ui;
+using System.ComponentModel;
 
 namespace ScriptManager.Network
 {
@@ -30,7 +31,8 @@ namespace ScriptManager.Network
             if (initialized)
                 return;
 
-            ScriptManagerPlugin.Instance.Config.WhitelistChanged += UpdateWhitelist;
+            ScriptManagerPlugin.Instance.Config.ScriptEntryChanged += OnScriptEntryUpdate;
+            ScriptManagerPlugin.Instance.Config.Whitelist.CollectionChanged += UpdateWhitelist;
             foreach (var script in ScriptManagerPlugin.Instance.Config.Whitelist)
                 if( script.Enabled )
                     scripts[script.Id] = script.Name;
@@ -221,6 +223,14 @@ namespace ScriptManager.Network
                     action, scripts);
                 Broadcast(request);
             }
+        }
+
+        private static void OnScriptEntryUpdate(object sender, PropertyChangedEventArgs e)
+        {
+            var script = sender as ScriptEntry;
+            if (e.PropertyName == nameof(ScriptEntry.Name) && scripts.ContainsKey(script.Id))
+                scripts[script.Id] = script.Name;
+
         }
     }
 }

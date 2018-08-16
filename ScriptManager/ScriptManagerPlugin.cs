@@ -46,6 +46,7 @@ using Sandbox.Game.World;
 using ScriptManager.Ui;
 using ScriptManager.Network;
 using Common = ScriptManager.ClientMod.Common;
+using VRage.FileSystem;
 
 namespace ScriptManager
 {
@@ -65,6 +66,7 @@ namespace ScriptManager
         public ScriptManagerConfig Config => _config?.Data;
 
         private static MD5 md5Hash;
+        public static string ScriptsPath { get; private set; }
 
         public ScriptEntry[] Whitelist
         {
@@ -84,6 +86,7 @@ namespace ScriptManager
             base.Init(torch);
 
             _config = Persistent<ScriptManagerConfig>.Load(Path.Combine(StoragePath, "ScriptManager.cfg"));
+            ScriptsPath = Path.Combine(StoragePath, "Scripts");
             
             md5Hash = MD5.Create();
 
@@ -118,7 +121,7 @@ namespace ScriptManager
             __result.Checkpoint.Mods = __result.Checkpoint.Mods.ToList();
 
             if( Instance.Config.Enabled )
-                __result.Checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(ClientMod.Common.Config.MOD_ID));
+                __result.Checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(Common.Config.MOD_ID));
 
         }
 
@@ -258,6 +261,13 @@ namespace ScriptManager
             switch (newState)
             {
                 case TorchSessionState.Loading:
+                    Log.Info("Updating all scripts...");
+                    List<Task> taskList = new List<Task>();
+                    Config.Whitelist.ForEach((ScriptEntry script) =>
+                    {
+                        taskList.Add(script.UpdateFromWorkshopAsync());
+                    });
+                    Task.WaitAll(taskList.ToArray());
                     /*if( Config.Enabled )
                         MyAPIGateway.Session.Mods.Add(
                             new MyObjectBuilder_Checkpoint.ModItem(

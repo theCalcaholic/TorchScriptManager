@@ -163,6 +163,7 @@
       <DependentUpon>ScriptManagerUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\TextEditor.cs" />
+    <Compile Include="WorkshopHacks.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="manifest.xml">
