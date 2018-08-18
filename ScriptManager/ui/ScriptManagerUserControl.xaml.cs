@@ -41,11 +41,11 @@ namespace ScriptManager.Ui
             editor.SaveAndClose += (object s, ScriptEditor.ScriptSaveEventArgs scriptData) =>
             {
                 var scriptCode = scriptData.Script.Code.Replace("\r", "");
-                var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
+                //var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
                 var scriptEntry = new ScriptEntry()
                 {
                     Name = scriptData.Script.Name,
-                    MD5Hash = scriptHash,
+                    //MD5Hash = scriptHash,
                     Code = scriptCode,
                     Enabled = false
                 };
@@ -56,7 +56,8 @@ namespace ScriptManager.Ui
         }
         public void OpenAddFromWorkshopDialog(object sender, RoutedEventArgs e)
         {
-            
+            var dialog = new AddFromWorkshopDialog();
+            dialog.Show();
         }
 
         private void WhitelistUpdated(object sender, DataTransferEventArgs e)
@@ -73,10 +74,10 @@ namespace ScriptManager.Ui
             editor.SaveAndClose += (object s, ScriptEditor.ScriptSaveEventArgs scriptData) =>
             {
                 var scriptCode = scriptData.Script.Code.Replace("\r", "");
-                var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
+                //var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
                 script.Name = scriptData.Script.Name;
                 script.Code = scriptCode;
-                script.MD5Hash = scriptHash;
+                //script.MD5Hash = scriptHash;
                 WhitelistUpdated(this, null);
             };
 

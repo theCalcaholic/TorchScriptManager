@@ -40,7 +40,6 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Button Grid.Column="4" Click="OpenAddFromCodeDialog">Add from Source Code</Button>
             <Button Grid.Row="0" Grid.Column="4" Click="OpenAddFromWorkshopDialog" IsEnabled="False" Visibility="Hidden" ToolTip="Work In Progress">Add from Workshop [WIP]</Button>
             <Button Click="EditSelectedScript" 
                     IsEnabled="{Binding ElementName=WhitelistTable, Path=SelectedItems.Count}">
@@ -51,6 +50,8 @@
                     IsEnabled="{Binding ElementName=WhitelistTable, Path=SelectedItems.Count}">
                 Remove
             </Button>
+            <Button Grid.Column="4" Click="OpenAddFromCodeDialog">Add from Source Code</Button>
+            <Button Grid.Column="6" Click="OpenAddFromWorkshopDialog">Add from Workshop</Button>
         </Grid>
     </StackPanel>
 </UserControl>

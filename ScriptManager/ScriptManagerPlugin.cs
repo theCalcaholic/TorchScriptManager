@@ -65,7 +65,6 @@ namespace ScriptManager
 
         public ScriptManagerConfig Config => _config?.Data;
 
-        private static MD5 md5Hash;
         public static string ScriptsPath { get; private set; }
 
         public ScriptEntry[] Whitelist
@@ -87,8 +86,6 @@ namespace ScriptManager
 
             _config = Persistent<ScriptManagerConfig>.Load(Path.Combine(StoragePath, "ScriptManager.cfg"));
             ScriptsPath = Path.Combine(StoragePath, "Scripts");
-            
-            md5Hash = MD5.Create();
 
 
             _sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
@@ -157,7 +154,7 @@ namespace ScriptManager
 
 
             program = program.Replace("\r", "");
-            var scriptHash = GetMD5Hash(program);
+            var scriptHash = Util.GetMD5Hash(program);
             var comparer = StringComparer.OrdinalIgnoreCase;
             foreach (var script in Instance.Whitelist)
             {
@@ -225,18 +222,6 @@ namespace ScriptManager
                 throw new InvalidOperationException("method SetDetailedInfo could not be retrieved!");
             setDetailedInfo.Invoke(instance, new object[] { info });
         }*/
-
-        static public string GetMD5Hash(string input)
-        {
-            byte[] data = md5Hash.ComputeHash(Encoding.UTF8.GetBytes(input));
-            var sBuilder = new StringBuilder();
-
-            for (int i = 0; i < data.Length; i++)
-            {
-                sBuilder.Append(data[i].ToString("x2"));
-            }
-            return sBuilder.ToString();
-        }
 
         /// <inheritdoc />
         public override void Update()

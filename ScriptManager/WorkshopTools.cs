@@ -12,13 +12,17 @@ using System.IO;
 using VRage.GameServices;
 using NLog;
 using VRage;
+using VRage.Dedicated;
+using SteamKit2;
 using VRage.FileSystem;
+using VRage.Steam;
 
 namespace ScriptManager
 {
-    public class WorkshopHacks
+    public class WorkshopTools
     {
         private static Logger Log = LogManager.GetLogger("ScriptManager");
+        public const uint AppID = 244850U;
 
         public static async Task<MyWorkshop.SubscribedItem> GetScriptInfoAsync(ulong workshopId)
         {
@@ -26,7 +30,8 @@ namespace ScriptManager
             var task = taskCompletionSrc.Task;
             //Action<MyWorkshop.SubscribedItem> callback = taskCompletionSrc.SetResult;
 
-            MyGameService.GetPublishedFileDetails(new ulong[] { workshopId }, (bool success, string data) =>
+            //SteamService.GetPublishedFileDetails(new ulong[] { workshopId }, (bool success, string data) =>
+            MySteamWebAPI.GetPublishedFileDetails(new ulong[] { workshopId }, (bool success, string data) =>
             {
                 if (!success)
                 {
@@ -69,7 +74,7 @@ namespace ScriptManager
 
                         xmlReader.ReadToFollowing("consumer_app_id");
                         int appId = xmlReader.ReadElementContentAsInt();
-                        if (appId != MyGameService.AppId)
+                        if (appId != AppID)
                         {
                             taskCompletionSrc.SetException(new Exception($"Failed to download script: id = {workshopId}, wrong appid, got {appId}."));
                             return;

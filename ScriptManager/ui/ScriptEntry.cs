@@ -93,6 +93,7 @@ namespace ScriptManager.Ui
             set
             {
                 _code = value;
+                MD5Hash = Util.GetMD5Hash(_code);
                 OnPropertyChanged();
             }
         }
@@ -155,7 +156,7 @@ namespace ScriptManager.Ui
             if (workshopId == 0)
                 throw new Exception("Invalid workshop ID!");
 
-            var fetchScriptInfoTask = WorkshopHacks.GetScriptInfoAsync(workshopId);
+            var fetchScriptInfoTask = WorkshopTools.GetScriptInfoAsync(workshopId);
             fetchScriptInfoTask.Wait();
             var scriptInfo = fetchScriptInfoTask.Result;
 
@@ -187,7 +188,7 @@ namespace ScriptManager.Ui
 
             Log.Info($"Updating script '{Name}'");
 
-            MyWorkshop.SubscribedItem scriptInfo = await WorkshopHacks.GetScriptInfoAsync(WorkshopID);
+            MyWorkshop.SubscribedItem scriptInfo = await WorkshopTools.GetScriptInfoAsync(WorkshopID);
             if( scriptInfo == null )
             {
                 Log.Warn($"An error occured while fetching script info for '{Name}'.");
@@ -198,7 +199,7 @@ namespace ScriptManager.Ui
 
             Name = scriptInfo.Title;
 
-            var code = await WorkshopHacks.DownloadScriptAsync(scriptInfo);
+            var code = await WorkshopTools.DownloadScriptAsync(scriptInfo);
 
             if (code == null)
                 return false;
