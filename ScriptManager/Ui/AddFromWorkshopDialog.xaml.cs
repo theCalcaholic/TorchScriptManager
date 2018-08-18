@@ -30,95 +30,90 @@ namespace ScriptManager.Ui
         private static readonly Logger Log = LogManager.GetLogger("ScriptManagerUI");
         public ScriptData Result;
         public DownloadStatus Status;
+        //public string StatusMessage = "";
+        //public bool DownloadInProgress = false;
         public AddFromWorkshopDialog()
         {
             InitializeComponent();
-            Log.Info("Creating new DownloadStatus object");
-            //Status = new DownloadStatus();
-            //DataContext = Status;
+            //Log.Info("Creating new DownloadStatus object");
+            Status = new DownloadStatus();
+            DataContext = Status;
+            Status.PropertyChanged += (object sender, PropertyChangedEventArgs e) => { UpdateLayout(); };
+            AllowsTransparency = false;
         }
 
-        public void AddScript(object sender, RoutedEventArgs e)
+        public async void AddScript(object sender, RoutedEventArgs e)
         {
-            if( !ulong.TryParse(WorkshopIDEditor.Text, out ulong workshopId) )
-            {
-                Log.Warn("Invalid input! The workshop ID must be a positive number.");
-                return;
-            }
-
-            var workshopService = SteamWorkshopService.Instance;
-            /*Task logonTask;
-            if (!workshopService.IsReady)
-            {
-                logonTask = workshopService.Logon();
-                var start = DateTime.Now;
-                while ( !logonTask.IsCompleted && !logonTask.IsFaulted && !logonTask.IsCanceled )
-                {
-                    logonTask.Wait(TimeSpan.FromSeconds(1));
-                    if (DateTime.Now - start > TimeSpan.FromSeconds(30))
-                        workshopService.CancelLogon();
-                }
-                if( logonTask.IsCanceled )
-                {
-                    Log.Error("Logging into steam timed out!");
-                    return;
-                }
-                else if( logonTask.IsFaulted )
-                {
-                    Log.Error($"An error occured while logging into steam: {logonTask.Exception.Message}");
-                    return;
-                }
-            }*/
-
             Log.Info("Retrieving script details...");
-            var scriptData = workshopService.GetPublishedFileDetails(new ulong[] { workshopId })?[workshopId];
+            Status.IsInProgress = true;
+            Status.StatusMessage = "Downloading Script Details...";
+            var shouldClose = false;
+            var delay = 3000;
 
-            if (scriptData == null)
-            {
-                Log.Warn($"Failed to retrieve script for workshop id '{workshopId}'!");
-                return;
-            }
+            string statusMsg = "";
 
-            ScriptManagerPlugin.Instance.Config.Whitelist.Add(new ScriptEntry()
+            if (!ulong.TryParse(WorkshopIDEditor.Text, out ulong workshopId))
             {
-                Name = scriptData.Title,
-                WorkshopID = scriptData.PublishedFileId,
-                Code = ""
-            });
-            Close();
-            return;
-
-            var task = WorkshopTools.GetScriptInfoAsync(workshopId);
-            var status = DataContext as DownloadStatus;
-            status.HasStarted = true;
-            status.StatusMessage = "Downloading Script...";
-
-            task.Wait(TimeSpan.FromSeconds(30));
-            status.IsComplete = task.IsCompleted;
-            status.HasFailed = task.IsCanceled || task.IsFaulted;
-            if (task.IsFaulted)
-            {
-                status.StatusMessage = "An Error occured while downloading! \n\n" + task.Exception.Message;
-            }
-            else if (task.IsCanceled)
-            {
-                status.StatusMessage = "An Error occured while downloading: Timeout after 30 seconds.";
+                statusMsg = "Invalid input! The workshop ID must be a positive number.";
+                Log.Warn(statusMsg);
             }
             else
             {
-                var script = task.Result as MyWorkshop.SubscribedItem;
-                ScriptManagerPlugin.Instance.Config.Whitelist.Add(new ScriptEntry()
+
+                var workshopService = SteamWorkshopService.Instance;
+                var scriptData = workshopService.GetPublishedFileDetails(new ulong[] { workshopId })?[workshopId];
+
+                if (scriptData == null)
                 {
-                    Name = script.Title,
-                    WorkshopID = script.PublishedFileId,
-                    Code = "",
-                });
+                    statusMsg = $"Failed to retrieve script for workshop id '{workshopId}'!";
+                    Log.Error(statusMsg);
+                    statusMsg = "ERROR: " + statusMsg;
+                }
+                else
+                {
+                    statusMsg = $"Script successful retrieved!";
+                    Log.Info(statusMsg);
+
+                    if( scriptData.ConsumerAppId != Util.AppID )
+                    {
+                        statusMsg = $"Invalid AppID! The downloaded object is for app {scriptData.ConsumerAppId}, expected: {Util.AppID}.";
+                        Log.Error(statusMsg);
+                        statusMsg = "ERROR: " + statusMsg;
+                    }
+                    else if( !scriptData.Tags.Contains("ingameScript") )
+                    {
+                        statusMsg = $"Retrieved object is not an ingame script!";
+                        Log.Error(statusMsg);
+                        statusMsg = "ERROR: " + statusMsg;
+                    }
+                    else
+                    {
+                        shouldClose = true;
+                        delay = 1000;
+                        ScriptManagerPlugin.Instance.Config.Whitelist.Add(new ScriptEntry()
+                        {
+                            Name = scriptData.Title,
+                            WorkshopID = scriptData.PublishedFileId,
+                            Code = ""
+                        });
+                    }
+
+                }
             }
+            Status.StatusMessage += "\n\n" + statusMsg;
+
+            await Task.Delay(delay);
+            Status.IsInProgress = false;
+            if(shouldClose)
+                Close();
         }
     }
 
     public class DownloadStatus : INotifyPropertyChanged
     {
+        private static readonly Logger Log = LogManager.GetLogger("ScriptManagerUI");
+        public event PropertyChangedEventHandler PropertyChanged;
+
         private string _statusMessage = "";
         public string StatusMessage
         {
@@ -142,64 +137,17 @@ namespace ScriptManager.Ui
                 if( _isInProgress != value )
                 {
                     _isInProgress = value;
-                    HasStarted = true;
-                    IsComplete = false;
-                    HasFailed = false;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsInProgress)));
                 }
             }
         }
-        private bool _isComplete = false;
-        public bool IsComplete
-        {
-            get => _isComplete;
-            set
-            {
-                if (_isComplete != value)
-                {
-                    _isComplete = value;
-                    IsInProgress = false;
-                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsComplete)));
-                }
-
-            }
-        }
-        private bool _hasStarted = false;
-        public bool HasStarted
-        {
-            get => _hasStarted;
-            set
-            {
-                if (_hasStarted != value)
-                {
-                    _hasStarted = value;
-                    IsInProgress = true;
-                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(HasStarted)));
-                }
-
-            }
-        }
-        private bool _hasFailed = false;
-        public bool HasFailed
-        {
-            get => _hasFailed;
-            set
-            {
-                if (_hasFailed != value)
-                {
-                    _hasFailed = value;
-                    IsInProgress = false;
-                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(HasFailed)));
-                }
-
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPropertyChanged(PropertyChangedEventArgs e)
         {
+            Log.Info($"Notifying property change of {e.PropertyName}");
             PropertyChanged?.Invoke(this, e);
+            if (PropertyChanged == null)
+                Log.Warn("Property Changed handler is null!");
         }
     }
 }

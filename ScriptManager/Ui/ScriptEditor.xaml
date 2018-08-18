@@ -11,7 +11,7 @@
         <local:ScriptData/>
     </Window.DataContext>
     <Window.Resources>
-        <local:MultiplyConverter x:Key="Multiply"/>
+        <local:WPFConverters x:Key="Multiply"/>
         <local:InvertBooleanConverter x:Key="Negate"/>
     </Window.Resources>
     <Grid VerticalAlignment="Stretch">

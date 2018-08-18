@@ -9,6 +9,7 @@ namespace ScriptManager
 {
     public static class Util
     {
+        public const uint AppID = 244850U;
         private static MD5 md5Hash = MD5.Create();
 
         static public string GetMD5Hash(string input)

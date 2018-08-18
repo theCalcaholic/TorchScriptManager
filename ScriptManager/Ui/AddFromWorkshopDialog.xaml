@@ -15,7 +15,7 @@
         <local:DownloadStatus/>
     </Window.DataContext>
     <Window.Resources>
-        <local:MultiplyConverter x:Key="Multiply"/>
+        <local:WPFConverters x:Key="Multiply"/>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -38,7 +38,7 @@
                  Margin="12"
                  HorizontalAlignment="Left"
                  Grid.Row="1" Grid.Column="1"/>
-        <Button Name="SaveButton"
+        <Button Name="AddButton"
                 Content="Add"
                 Click="AddScript"
                 HorizontalAlignment="Center"
@@ -47,24 +47,30 @@
                 Grid.Row="2"
                 Grid.ColumnSpan="2"/>
         <Label Name="LoadingOverlay"
-               Content="Downloading Script..."
-               HorizontalContentAlignment="Center"
-               VerticalContentAlignment="Center"
-               FontSize="{Binding Path=FontSize, ElementName=WorkshopIDEditorLabel, Converter={StaticResource Multiply}, ConverterParameter=2}"
+               Content="{Binding StatusMessage}"
+               HorizontalContentAlignment="Left"
+               VerticalContentAlignment="Top"
+               Padding="12"
+               FontSize="{Binding Path=FontSize, ElementName=WorkshopIDEditorLabel, Converter={StaticResource Multiply}, ConverterParameter=0.8}"
+               FontFamily="Lucida Console"
                Foreground="Red"
-               Opacity="0.7"
+               Opacity="0.9"
                Grid.Row="0"
                Grid.Column="0"
                Grid.RowSpan="4"
                Grid.ColumnSpan="4"
+               Margin="6"
+               BorderBrush="Gray"
+               BorderThickness="2"
                VerticalAlignment="Stretch"
                HorizontalAlignment="Stretch"
-               Background="DarkGray">
+               Background="#111">
             <Label.Style>
                 <Style TargetType="Label">
+                    <Setter Property="Visibility" Value="Hidden"/>
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsInProgress}" Value="False">
-                            <Setter Property="Visibility" Value="Hidden"/>
+                        <DataTrigger Binding="{Binding IsInProgress}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>

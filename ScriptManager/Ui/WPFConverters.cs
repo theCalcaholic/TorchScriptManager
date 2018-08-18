@@ -8,7 +8,7 @@ using System.Windows.Data;
 
 namespace ScriptManager.Ui
 {
-    public class MultiplyConverter : IValueConverter
+    public class WPFConverters : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

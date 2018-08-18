@@ -175,7 +175,7 @@
     <Compile Include="Ui\AddFromWorkshopDialog.xaml.cs">
       <DependentUpon>AddFromWorkshopDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Ui\MultiplyConverter.cs" />
+    <Compile Include="Ui\WPFConverters.cs" />
     <Compile Include="Ui\ScriptEntry.cs" />
     <Compile Include="Ui\ScriptManagerConfig.cs" />
     <Compile Include="ScriptManagerPlugin.cs" />

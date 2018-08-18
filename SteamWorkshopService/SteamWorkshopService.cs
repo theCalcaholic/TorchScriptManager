@@ -94,9 +94,15 @@ namespace SteamWorkshopTools
                     Log.Error($"Fetching File Details failed: {e.Message}");
                     return null;
                 }
-
-                var detailsList = allFilesDetails.Children.Find((KeyValue kv) => kv.Name == "publishedfiledetails").Children;
-                var resultCount = allFilesDetails.GetValueOrDefault<int>("resultcount");
+                var detailsList = allFilesDetails?.Children.Find((KeyValue kv) => kv.Name == "publishedfiledetails")?.Children;
+                var resultCount = allFilesDetails?.GetValueOrDefault<int>("resultcount");
+                if( detailsList == null || resultCount == null)
+                {
+                    Log.Error("Received invalid data: ");
+                    if(allFilesDetails != null)
+                        PrintKeyValue(allFilesDetails);
+                    return null;
+                }
                 if ( detailsList.Count != workshopIds.Count() || resultCount != workshopIds.Count())
                 {
                     Log.Error($"Received unexpected number of fileDetails. Expected: {workshopIds.Count()}, Received: {resultCount}");
@@ -107,7 +113,17 @@ namespace SteamWorkshopTools
                 for( int i = 0; i < resultCount; i++ )
                 {
                     var fileDetails = detailsList[i];
-                    PrintKeyValue(fileDetails);
+
+                    var tagContainer = fileDetails.Children.Find(item => item.Name == "tags");
+                    List<string> tags = new List<string>();
+                    if (tagContainer != null)
+                        foreach (var tagKv in tagContainer.Children)
+                        {
+                            var tag = tagKv.Children.Find(item => item.Name == "tag")?.Value;
+                            if( tag != null)
+                                tags.Add(tag);
+                        }
+
                     result[workshopIds.ElementAt(i)] = new PublishedItemDetails()
                     {
                         PublishedFileId = fileDetails.GetValueOrDefault<ulong>("publishedfileId"),
@@ -122,7 +138,8 @@ namespace SteamWorkshopTools
                         FileName        = fileDetails.GetValueOrDefault<string>("filename"),
                         ConsumerAppId   = fileDetails.GetValueOrDefault<ulong>("consumer_app_id"),
                         CreatorAppId    = fileDetails.GetValueOrDefault<ulong>("creator_app_id"),
-                        Creator         = fileDetails.GetValueOrDefault<ulong>("creator")
+                        Creator         = fileDetails.GetValueOrDefault<ulong>("creator"),
+                        Tags            = tags.ToArray()
                     };
                 }
                 return result;

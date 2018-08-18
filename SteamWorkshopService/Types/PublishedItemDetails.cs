@@ -21,5 +21,6 @@ namespace SteamWorkshopTools.Types
         public ulong ConsumerAppId;
         public ulong CreatorAppId;
         public ulong Creator;
+        public string[] Tags;
     }
 }
