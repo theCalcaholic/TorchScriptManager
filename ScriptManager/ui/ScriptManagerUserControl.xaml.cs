@@ -45,7 +45,6 @@ namespace ScriptManager.Ui
                 var scriptEntry = new ScriptEntry()
                 {
                     Name = scriptData.Script.Name,
-                    //MD5Hash = scriptHash,
                     Code = scriptCode,
                     Enabled = false
                 };
@@ -77,6 +76,7 @@ namespace ScriptManager.Ui
                 //var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
                 script.Name = scriptData.Script.Name;
                 script.Code = scriptCode;
+                script.KeepUpdated = scriptData.Script.KeepUpdated;
                 //script.MD5Hash = scriptHash;
                 WhitelistUpdated(this, null);
             };

@@ -210,7 +210,9 @@ namespace ScriptManager.Ui
                 return true;
             }
 
-            messageHandler?.Invoke("Downloading script code...");
+            msg = "Downloading script code...";
+            Log.Info(msg);
+            messageHandler?.Invoke(msg);
             try
             {
                 await UpdateCodeFromWorkshopAsync(scriptInfo);
@@ -248,7 +250,7 @@ namespace ScriptManager.Ui
                 }
                 else
                 {
-                    Log.Info(statusMsg = $"Script info successful retrieved!");
+                    Log.Info(statusMsg = $"Script info successfully retrieved!");
                     Name = scriptData.Title;
                     WorkshopID = scriptData.PublishedFileId;
 

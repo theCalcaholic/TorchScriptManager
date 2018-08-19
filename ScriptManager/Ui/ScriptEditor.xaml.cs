@@ -46,12 +46,12 @@ namespace ScriptManager.Ui
                     var result = MessageBox.Show(
                         "Are you sure ?\nThis will overwrite any manual changes to the code on server reboot!", 
                         "Warning", button, icon);
-                    /*if (result != MessageBoxResult.Yes)
+                    if (result != MessageBoxResult.Yes)
                     {
                         hasScriptBeenLoaded = false;
                         scriptData.KeepUpdated = false;
                         hasScriptBeenLoaded = true;
-                    }*/
+                    }
                 }
             };
 
