@@ -57,6 +57,16 @@ namespace ScriptManager.Ui
 
         }
 
+        public void HideWorkshopSettings()
+        {
+            (DataContext as ScriptData).WorkshopEditable = false;
+        }
+
+        public void ShowWorkshopSettings()
+        {
+            (DataContext as ScriptData).WorkshopEditable = true;
+        }
+
         public void LoadScript(ScriptEntry script)
         {
             var context = DataContext as ScriptData;
@@ -64,6 +74,8 @@ namespace ScriptManager.Ui
             context.Code = script.Code;
             context.WorkshopID = script.WorkshopID;
             context.KeepUpdated = script.KeepUpdated;
+            if (context.WorkshopID == 0)
+                HideWorkshopSettings();
             hasScriptBeenLoaded = true;
         }
 
@@ -120,6 +132,16 @@ namespace ScriptManager.Ui
     }
     public class ScriptData : ViewModel
     {
+        private bool _workshopEditable = false;
+        public bool WorkshopEditable
+        {
+            get => _workshopEditable;
+            set
+            {
+                SetValue(ref _workshopEditable, value);
+            }
+        }
+
         private string _name;
         public string Name
         {

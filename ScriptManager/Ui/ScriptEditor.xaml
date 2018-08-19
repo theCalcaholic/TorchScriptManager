@@ -17,7 +17,18 @@
     <Grid VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition>
+                <RowDefinition.Style>
+                    <Style TargetType="RowDefinition">
+                        <Setter Property="Height" Value="Auto"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                                <Setter Property="Height" Value="0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </RowDefinition.Style>
+            </RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -41,7 +52,17 @@
                  MaxLines="1" 
                  Height="{Binding FontSize, RelativeSource={RelativeSource Self}, Converter={StaticResource Multiply}, ConverterParameter=1.5}">
         </TextBox>
-        <Label Content="WorkshopID:" Grid.Row="1" Margin="12 12 6 12"/>
+        <Label Content="WorkshopID:" Grid.Row="1" Margin="12 12 6 12">
+            <Label.Style>
+                <Style TargetType="Label">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Label.Style>
+        </Label>
         <Label Name="WorkshopIDEditor"
                Width="100"
                Margin="0 12"
@@ -52,7 +73,17 @@
                BorderBrush="DarkGray"
                Background="#E8E8E8"
                HorizontalAlignment="Left"
-               Grid.Row="1" Grid.Column="1"/>
+               Grid.Row="1" Grid.Column="1">
+            <Label.Style>
+                <Style TargetType="Label">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Label.Style>
+        </Label>
         <CheckBox Name="KeepUpdatedCheckBox"
                   IsChecked="{Binding KeepUpdated}"
                   Margin="24 12 6 12"
@@ -63,13 +94,23 @@
                 <Style TargetType="CheckBox">
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding WorkshopID}" Value="0">
-                            <Setter Property="IsEnabled" Value="False"/>
+                            <Setter Property="Visibility" Value="Hidden"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </CheckBox.Style>
         </CheckBox>
-        <Label Content="Keep Updated" Grid.Row="1" Grid.Column="3" Margin="0 12"/>
+        <Label Content="Keep Updated" Grid.Row="1" Grid.Column="3" Margin="0 12">
+            <Label.Style>
+                <Style TargetType="Label">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Label.Style>
+        </Label>
         <TextBox Name="CodeEditor"
                  Text="{Binding Code}"
                  Margin="12"
