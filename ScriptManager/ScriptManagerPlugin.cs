@@ -207,7 +207,6 @@ namespace ScriptManager
             var setDetailedInfo = typeof(MyProgrammableBlock).GetMethod("SetDetailedInfo", BindingFlags.NonPublic | BindingFlags.Instance);
             if (setDetailedInfo == null)
                 throw new InvalidOperationException("method SetDetailedInfo could not be retrieved!");
-
             Task.Delay(300).ContinueWith(_ =>
             {
                 setDetailedInfo.Invoke(__instance, new object[] { msg });

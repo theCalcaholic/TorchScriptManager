@@ -6,9 +6,8 @@
         xmlns:local="clr-namespace:ScriptManager.Ui"
         mc:Ignorable="d" 
         d:DesignHeight="200" d:DesignWidth="400"
-        MinWidth="400" MinHeight="200"
+        Width="400" Height="200"
         ResizeMode="NoResize" 
-        SizeToContent="WidthAndHeight" 
         Padding="20"
         Title="Add Script From Workshop ID">
     <Window.DataContext>
@@ -46,27 +45,33 @@
                 Margin="12"
                 Grid.Row="2"
                 Grid.ColumnSpan="2"/>
-        <Label Name="LoadingOverlay"
-               Content="{Binding StatusMessage}"
-               HorizontalContentAlignment="Left"
-               VerticalContentAlignment="Top"
-               Padding="12"
-               FontSize="{Binding Path=FontSize, ElementName=WorkshopIDEditorLabel, Converter={StaticResource Multiply}, ConverterParameter=0.8}"
-               FontFamily="Lucida Console"
-               Foreground="Red"
-               Opacity="0.9"
-               Grid.Row="0"
-               Grid.Column="0"
-               Grid.RowSpan="4"
-               Grid.ColumnSpan="4"
-               Margin="6"
-               BorderBrush="Gray"
-               BorderThickness="2"
-               VerticalAlignment="Stretch"
-               HorizontalAlignment="Stretch"
-               Background="#111">
-            <Label.Style>
-                <Style TargetType="Label">
+        <ScrollViewer
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Disabled"
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.RowSpan="4"
+            Grid.ColumnSpan="4">
+            <Grid>
+                <Label Name="StatusOverlay"
+                       Content="{Binding StatusMessage}"
+                       HorizontalContentAlignment="Left"
+                       VerticalContentAlignment="Top"
+                       Padding="12"
+                       FontSize="{Binding Path=FontSize, ElementName=WorkshopIDEditorLabel, Converter={StaticResource Multiply}, ConverterParameter=0.8}"
+                       FontFamily="Lucida Console"
+                       Foreground="Red"
+                       Opacity="0.9"
+                       Margin="6"
+                       BorderBrush="Gray"
+                       BorderThickness="2"
+                       VerticalAlignment="Stretch"
+                       HorizontalAlignment="Stretch"
+                       Background="#111">
+                </Label>
+            </Grid>
+            <ScrollViewer.Style>
+                <Style TargetType="ScrollViewer">
                     <Setter Property="Visibility" Value="Hidden"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsInProgress}" Value="True">
@@ -74,7 +79,7 @@
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
-            </Label.Style>
-        </Label>
+            </ScrollViewer.Style>
+        </ScrollViewer>
     </Grid>
 </Window>

@@ -55,8 +55,11 @@ namespace ScriptManager.Ui
                 }
                 else
                 {
+                    var pos = assignedIds.IndexOf(_id);
+                    if (pos != -1)
+                        assignedIds.RemoveAt(pos);
                     _id = value;
-                    nextId = Math.Max(nextId, value) + 1;
+                    nextId = Math.Max(nextId, value + 1);
                 }
 
                 MD5Hash = Util.GetMD5Hash(Code);
@@ -88,7 +91,7 @@ namespace ScriptManager.Ui
             }
         }
 
-        [XmlIgnore]
+        //[XmlIgnore]
         public string Code
         {
             get
