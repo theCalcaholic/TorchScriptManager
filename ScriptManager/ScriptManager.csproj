@@ -171,7 +171,6 @@
   <ItemGroup>
     <Compile Include="Util.cs" />
     <Compile Include="Network\MessageHandler.cs" />
-    <Compile Include="WorkshopTools.cs" />
     <Compile Include="Ui\AddFromWorkshopDialog.xaml.cs">
       <DependentUpon>AddFromWorkshopDialog.xaml</DependentUpon>
     </Compile>

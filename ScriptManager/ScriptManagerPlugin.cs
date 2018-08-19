@@ -84,8 +84,9 @@ namespace ScriptManager
         {
             base.Init(torch);
 
-            _config = Persistent<ScriptManagerConfig>.Load(Path.Combine(StoragePath, "ScriptManager.cfg"));
             ScriptsPath = Path.Combine(StoragePath, "Scripts");
+
+            _config = Persistent<ScriptManagerConfig>.Load(Path.Combine(StoragePath, "ScriptManager.cfg"));
 
 
             _sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
@@ -250,7 +251,8 @@ namespace ScriptManager
                     List<Task> taskList = new List<Task>();
                     Config.Whitelist.ForEach((ScriptEntry script) =>
                     {
-                        taskList.Add(script.UpdateFromWorkshopAsync());
+                        if( script.KeepUpdated )
+                            taskList.Add(script.UpdateFromWorkshopAsync());
                     });
                     Task.WaitAll(taskList.ToArray());
                     /*if( Config.Enabled )

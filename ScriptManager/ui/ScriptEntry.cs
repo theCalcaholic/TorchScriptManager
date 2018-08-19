@@ -15,9 +15,12 @@ using System.Xml.Serialization;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Sandbox.Engine.Networking;
+using VRage;
 using VRage.FileSystem;
 using System.IO;
 using Sandbox.ModAPI;
+using SteamWorkshopTools;
+using SteamWorkshopTools.Types;
 
 namespace ScriptManager.Ui
 {
@@ -26,7 +29,8 @@ namespace ScriptManager.Ui
         private static Logger Log = LogManager.GetLogger("ScriptManager");
         private bool _enabled;
         private static long nextId = 0;
-        private bool _needsUpdate = true;
+        private static List<long> assignedIds = new List<long>();
+        //private bool _needsUpdate = true;
 
         private long _id;
 
@@ -44,17 +48,18 @@ namespace ScriptManager.Ui
             get => _id;
             set
             {
-                if( _id > nextId )
+                if (assignedIds.Contains(value))
                 {
-                    Log.Warn("Invalid script Id! Id will be changed.");
+                    Log.Warn("Duplicate script id! Id will be changed.");
                     _id = nextId++;
                 }
                 else
                 {
                     _id = value;
-                    nextId = _id + 1;
+                    nextId = Math.Max(nextId, value) + 1;
                 }
 
+                MD5Hash = Util.GetMD5Hash(Code);
                 OnPropertyChanged();
             }
         }
@@ -73,28 +78,39 @@ namespace ScriptManager.Ui
 
         private string _md5Hash;
         [TViews.Display(Name = "MD5 Hash", Description = "MD5 Hash of the script's code.")]
+        [XmlIgnore]
         public string MD5Hash
         {
             get => _md5Hash;
             set
             {
-                _md5Hash = value;
-                OnPropertyChanged();
+                SetValue(ref _md5Hash, value);
             }
         }
 
-        private string _code;
+        [XmlIgnore]
         public string Code
         {
             get
             {
-                return _code;
+                var scriptPath = GetScriptPath();
+                if( MyFileSystem.FileExists(scriptPath) )
+                {
+                    return File.ReadAllText(scriptPath);
+                }
+                else
+                {
+                    Log.Error($"Script code could not be found for script '{Name}' (Id: {Id})!\n");
+                    return "";
+                }
             }
             set
             {
-                _code = value;
-                MD5Hash = Util.GetMD5Hash(_code);
+                var scriptPath = GetScriptPath();
+                File.WriteAllText(scriptPath, value);
+                MD5Hash = Util.GetMD5Hash(value);
                 OnPropertyChanged();
+                UpdateRunning();
             }
         }
 
@@ -114,6 +130,8 @@ namespace ScriptManager.Ui
             set
             {
                 _keepUpdated = value;
+                //if (value)
+                //    _needsUpdate = true;
                 OnPropertyChanged();
             }
         }
@@ -137,108 +155,189 @@ namespace ScriptManager.Ui
 
         public ScriptEntry()
         {
-            Id = nextId++;
+            long id;
+            for (id = 0; id <= long.MaxValue; id++)
+            {
+                if (!assignedIds.Contains(id))
+                {
+                    _id = id;
+                    break;
+                }
+            }
+            if (id == long.MaxValue)
+                throw new Exception("Can't assign id: Maximum number of scripts reached!");
+
             _programmableBlocks.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => {
                 OnPropertyChanged("InstallCount");
             };
-            PropertyChanged += (object sender, PropertyChangedEventArgs e) =>
-            {
-                if (e.PropertyName == nameof(Code))
-                    UpdateRunning();
-                else if (e.PropertyName == nameof(WorkshopID))
-                    UpdateFromWorkshopAsync();
-            };
         }
 
-        static public ScriptEntry CreateFromWorkshopId(ulong workshopId, bool keepUpdated = false)
+        public async Task<bool> UpdateFromWorkshopAsync(Action<string> messageHandler = null)
         {
-
-            if (workshopId == 0)
-                throw new Exception("Invalid workshop ID!");
-
-            var fetchScriptInfoTask = WorkshopTools.GetScriptInfoAsync(workshopId);
-            fetchScriptInfoTask.Wait();
-            var scriptInfo = fetchScriptInfoTask.Result;
-
-            var script = new ScriptEntry()
-            {
-                Name = scriptInfo.Title,
-                MD5Hash = "",
-                Code = "",
-                KeepUpdated = keepUpdated
-            };
-
-            return script;
-        }
-
-        /*public async Task<bool> UpdateFromWorkshopAsync()
-        {
-            return await Task.Run(delegate {
-                return UpdateFromWorkshopBlocking();
-            });
-        }*/
-
-        public async Task<bool> UpdateFromWorkshopAsync()
-        {
-            if (WorkshopID == 0 || !KeepUpdated || !_needsUpdate)
+            if (WorkshopID == 0)
                 return true;
 
-            if (!MyGameService.IsOnline)
-                return false;
 
-            Log.Info($"Updating script '{Name}'");
-
-            MyWorkshop.SubscribedItem scriptInfo = await WorkshopTools.GetScriptInfoAsync(WorkshopID);
-            if( scriptInfo == null )
+            var msg = "";
+            PublishedItemDetails scriptInfo = null;
+            try
             {
-                Log.Warn($"An error occured while fetching script info for '{Name}'.");
+                messageHandler?.Invoke("Fetching script details...");
+                scriptInfo = await UpdateDetailsFromWorkshopAsync();
+            }
+            catch (Exception e)
+            {
+                msg = $"Script Information could not be retrieved from Workshop!\n{e.Message}";
+                Log.Error(msg);
+                messageHandler?.Invoke("ERROR: " + msg);
+                return false;
+            }
+            if ( scriptInfo == null)
+            {
+                msg = "Script Information could not be retrieved from Workshop!";
+                Log.Error(msg);
+                messageHandler?.Invoke("ERROR: " + msg);
                 return false;
             }
 
-            Log.Info($"Fetched script info for '{Name}'.");
+            if(IsScriptUpToDate(scriptInfo))
+            {
+                Code = ReadScriptFromArchive();
+                msg = $"Script '{Name}' is up to date.";
+                Log.Info(msg);
+                messageHandler?.Invoke(msg);
+                //_needsUpdate = false;
+                return true;
+            }
 
-            Name = scriptInfo.Title;
-
-            var code = await WorkshopTools.DownloadScriptAsync(scriptInfo);
-
-            if (code == null)
+            messageHandler?.Invoke("Downloading script code...");
+            try
+            {
+                await UpdateCodeFromWorkshopAsync(scriptInfo);
+            }
+            catch (Exception e)
+            {
+                msg = $"Code could not be downloaded from Workshop!\n{e.Message}";
+                Log.Error(msg);
+                messageHandler?.Invoke("ERROR: " + msg);
                 return false;
-
-            Code = code;
+            }
+            //_needsUpdate = false;
             return true;
         }
 
-        /*public static bool DownloadScriptBlocking(MyWorkshop.SubscribedItem item)
+        public async Task<PublishedItemDetails> UpdateDetailsFromWorkshopAsync()
         {
-            if (!MyGameService.IsOnline)
+            string statusMsg;
+            var workshopService = SteamWorkshopService.Instance;
+            var scriptData = (await workshopService.GetPublishedFileDetails(new ulong[] { WorkshopID }))?[WorkshopID];
+
+            if (scriptData == null)
             {
-                return false;
-            }
-            string text = Path.Combine(MyFileSystem., item.PublishedFileId + ".sbs");
-            if (!MyWorkshop.IsModUpToDateBlocking(text, item, true, -1L))
-            {
-                if (!MyWorkshop.DownloadItemBlocking(text, item.UGCHandle))
-                {
-                    return false;
-                }
+                throw new Exception($"Failed to retrieve script for workshop id '{WorkshopID}'!");
             }
             else
             {
-                MySandboxGame.Log.WriteLineAndConsole($"Up to date mod: Id = {item.PublishedFileId}, title = '{item.Title}'");
-            }
-            return true;
-        }*/
+                if (scriptData.ConsumerAppId != Util.AppID)
+                {
+                    throw new Exception($"Invalid AppID! The requested object is for app {scriptData.ConsumerAppId}, expected: {Util.AppID}.");
+                }
+                else if (!scriptData.Tags.Contains("ingameScript"))
+                {
+                    throw new Exception($"The requested object is not an ingame script!");
+                }
+                else
+                {
+                    Log.Info(statusMsg = $"Script info successful retrieved!");
+                    Name = scriptData.Title;
+                    WorkshopID = scriptData.PublishedFileId;
 
-        private void UpdateRunning()
-        {
-            foreach(var pbId in ProgrammableBlocks )
-            {
-                if (MyAPIGateway.Entities.GetEntityById(pbId) is IMyProgrammableBlock pb)
-                    pb.ProgramData = Code;
+                    return scriptData;
+                }
             }
         }
 
+        public async Task UpdateCodeFromWorkshopAsync(PublishedItemDetails fileDetails)
+        {
+            var workshopService = SteamWorkshopService.Instance;
+            try
+            {
+                await workshopService.DownloadPublishedFile(fileDetails, ScriptManagerPlugin.ScriptsPath, WorkshopID + ".sbs");
+            }
+            catch (Exception e)
+            {
+                throw new Exception("An error occured while downloading script code: \n" + e.Message);
+            }
+
+            Code = ReadScriptFromArchive();
+        }
+
+        public void Delete()
+        {
+            var scriptPath = GetScriptPath();
+            if (File.Exists(scriptPath))
+                File.Delete(scriptPath);
+            var scriptWSPath = Path.Combine(ScriptManagerPlugin.ScriptsPath, WorkshopID + ".sbs");
+            if (File.Exists(scriptWSPath))
+                File.Delete(scriptWSPath);
+        }
+
+        private void UpdateRunning()
+        {
+            var code = Code;
+            foreach(var pbId in ProgrammableBlocks )
+            {
+                if (MyAPIGateway.Entities.GetEntityById(pbId) is IMyProgrammableBlock pb)
+                    pb.ProgramData = code;
+            }
+        }
+
+        private string GetScriptPath()
+        {
+            return Path.Combine(ScriptManagerPlugin.ScriptsPath, $"ingame_script_{Id.ToString().PadLeft(4, '0')}.cs");
+        }
+
+        private string ReadScriptFromArchive()
+        {
+            var scriptPath = Path.Combine(ScriptManagerPlugin.ScriptsPath, WorkshopID + ".sbs");
+            string text = null;
+
+            foreach (string file in MyFileSystem.GetFiles(scriptPath, ".cs", MySearchOption.AllDirectories))
+            {
+                if (MyFileSystem.FileExists(file))
+                {
+                    using (Stream stream = MyFileSystem.OpenRead(file))
+                    {
+                        using (StreamReader streamReader = new StreamReader(stream))
+                        {
+                            text = streamReader.ReadToEnd();
+                        }
+                    }
+                }
+            }
+            return text;
+        }
+
+        private bool IsScriptUpToDate(PublishedItemDetails script)
+        {
+            string scriptPath = Path.Combine(ScriptManagerPlugin.ScriptsPath, WorkshopID + ".sbs");
+            if (script.FileSize > 0L)
+            {
+                if (!File.Exists(scriptPath))
+                    return false;
+
+                using (FileStream fileStream = File.OpenRead(scriptPath))
+                {
+                    if (fileStream.Length != script.FileSize)
+                        return false;
+                }
+
+            }
+
+            return File.GetLastWriteTimeUtc(scriptPath) >= script.TimeUpdated;
+        }
     }
+
 
     public class ScriptNotFoundException : Exception
     {

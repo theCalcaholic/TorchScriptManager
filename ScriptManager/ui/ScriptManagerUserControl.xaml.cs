@@ -87,8 +87,9 @@ namespace ScriptManager.Ui
 
         private void RemoveSelectedScript(object sender, RoutedEventArgs e)
         {
-            (DataContext as ScriptManagerConfig).Whitelist.Remove(
-                (WhitelistTable.SelectedItem as ScriptEntry));
+            var scriptEntry = (WhitelistTable.SelectedItem as ScriptEntry);
+            scriptEntry.Delete();
+            (DataContext as ScriptManagerConfig).Whitelist.Remove(scriptEntry);
         }
     }
 }

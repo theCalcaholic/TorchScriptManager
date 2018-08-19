@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
+using System.Net;
 using NLog;
 using SteamKit2;
 using System.Net.Http;
@@ -76,7 +77,7 @@ namespace SteamWorkshopTools
             logonTaskCompletionSource?.SetCanceled();
         }
 
-        public Dictionary<ulong, PublishedItemDetails> GetPublishedFileDetails(IEnumerable<ulong> workshopIds)
+        public async Task<Dictionary<ulong, PublishedItemDetails>> GetPublishedFileDetails(IEnumerable<ulong> workshopIds)
         {
             //if (!IsReady)
             //    throw new Exception("SteamWorkshopService not initialized!");
@@ -84,9 +85,10 @@ namespace SteamWorkshopTools
             using (dynamic remoteStorage = WebAPI.GetInterface("ISteamRemoteStorage"))
             {
                 KeyValue allFilesDetails = null ;
+                remoteStorage.Timeout = TimeSpan.FromSeconds(30);
                 try
                 {
-                    allFilesDetails = remoteStorage.GetPublishedFileDetails1(itemcount: 1, publishedfileids: workshopIds, method: HttpMethod.Post);
+                    allFilesDetails = await Task.Run(delegate { return remoteStorage.GetPublishedFileDetails1(itemcount: 1, publishedfileids: workshopIds, method: HttpMethod.Post); });
                     //fileDetails = remoteStorage.Call(HttpMethod.Post, "GetPublishedFileDetails", 1, new Dictionary<string, string>() { { "itemcount", workshopIds.Count().ToString() }, { "publishedfileids", workshopIds.ToString() } });
                 }
                 catch( HttpRequestException e )
@@ -126,7 +128,7 @@ namespace SteamWorkshopTools
 
                     result[workshopIds.ElementAt(i)] = new PublishedItemDetails()
                     {
-                        PublishedFileId = fileDetails.GetValueOrDefault<ulong>("publishedfileId"),
+                        PublishedFileId = fileDetails.GetValueOrDefault<ulong>("publishedfileid"),
                         Views           = fileDetails.GetValueOrDefault<uint>("views"),
                         Subscriptions   = fileDetails.GetValueOrDefault<uint>("subscriptions"),
                         TimeUpdated     = Util.DateTimeFromUnixTimeStamp(fileDetails.GetValueOrDefault<ulong>("time_updated")),
@@ -134,7 +136,7 @@ namespace SteamWorkshopTools
                         Description     = fileDetails.GetValueOrDefault<string>("description"),
                         Title           = fileDetails.GetValueOrDefault<string>("title"),
                         FileUrl         = fileDetails.GetValueOrDefault<string>("file_url"),
-                        FileSize        = fileDetails.GetValueOrDefault<ulong>("file_size"),
+                        FileSize        = fileDetails.GetValueOrDefault<long>("file_size"),
                         FileName        = fileDetails.GetValueOrDefault<string>("filename"),
                         ConsumerAppId   = fileDetails.GetValueOrDefault<ulong>("consumer_app_id"),
                         CreatorAppId    = fileDetails.GetValueOrDefault<ulong>("creator_app_id"),
@@ -144,6 +146,41 @@ namespace SteamWorkshopTools
                 }
                 return result;
             }
+        }
+
+        public async Task DownloadPublishedFile(PublishedItemDetails fileDetails, string dir, string name = null)
+        {
+            var fullPath = Path.Combine(dir, name);
+            if (name == null)
+                name = fileDetails.FileName;
+            var expectedSize = (fileDetails.FileSize == 0) ? -1 : fileDetails.FileSize;
+
+            using (var client = new WebClient())
+            {
+                try
+                {
+                    var downloadTask = client.DownloadFileTaskAsync(fileDetails.FileUrl, Path.Combine(dir, name));
+                    DateTime start = DateTime.Now;
+                    for (int i = 0; i < 30; i++)
+                    {
+                        await Task.Delay(1000);
+                        if (downloadTask.IsCompleted)
+                            break;
+                    }
+                    if ( !downloadTask.IsCompleted )
+                    {
+                        client.CancelAsync();
+                        throw new Exception("Timeout while attempting to downloading published workshop item!");
+                    }
+                    //var text = await client.DownloadStringTaskAsync(url);
+                    //File.WriteAllText(fullPath, text);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception($"{e.Message} - url: {fileDetails.FileUrl}, path: {Path.Combine(dir, name)}");
+                }
+            }
+
         }
 
         class Printable

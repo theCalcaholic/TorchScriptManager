@@ -16,7 +16,7 @@ namespace SteamWorkshopTools.Types
         public string Description;
         public string Title;
         public string FileUrl;
-        public ulong FileSize;
+        public long FileSize;
         public string FileName;
         public ulong ConsumerAppId;
         public ulong CreatorAppId;

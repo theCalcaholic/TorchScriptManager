@@ -44,9 +44,8 @@ namespace ScriptManager.Ui
 
         public async void AddScript(object sender, RoutedEventArgs e)
         {
-            Log.Info("Retrieving script details...");
+            Status.StatusMessage = "";
             Status.IsInProgress = true;
-            Status.StatusMessage = "Downloading Script Details...";
             var shouldClose = false;
             var delay = 3000;
 
@@ -59,48 +58,26 @@ namespace ScriptManager.Ui
             }
             else
             {
-
-                var workshopService = SteamWorkshopService.Instance;
-                var scriptData = workshopService.GetPublishedFileDetails(new ulong[] { workshopId })?[workshopId];
-
-                if (scriptData == null)
+                var script = new ScriptEntry
                 {
-                    statusMsg = $"Failed to retrieve script for workshop id '{workshopId}'!";
+                   WorkshopID = workshopId
+                };
+                if( !await script.UpdateFromWorkshopAsync(msg => { Status.StatusMessage += "\n>" + msg; }) )
+                {
+                    statusMsg = "Failed to add script from workshop id";
                     Log.Error(statusMsg);
-                    statusMsg = "ERROR: " + statusMsg;
                 }
                 else
                 {
-                    statusMsg = $"Script successful retrieved!";
+                    shouldClose = true;
+                    delay = 1000;
+                    statusMsg = "Successfully added Script from Workshop.";
                     Log.Info(statusMsg);
-
-                    if( scriptData.ConsumerAppId != Util.AppID )
-                    {
-                        statusMsg = $"Invalid AppID! The downloaded object is for app {scriptData.ConsumerAppId}, expected: {Util.AppID}.";
-                        Log.Error(statusMsg);
-                        statusMsg = "ERROR: " + statusMsg;
-                    }
-                    else if( !scriptData.Tags.Contains("ingameScript") )
-                    {
-                        statusMsg = $"Retrieved object is not an ingame script!";
-                        Log.Error(statusMsg);
-                        statusMsg = "ERROR: " + statusMsg;
-                    }
-                    else
-                    {
-                        shouldClose = true;
-                        delay = 1000;
-                        ScriptManagerPlugin.Instance.Config.Whitelist.Add(new ScriptEntry()
-                        {
-                            Name = scriptData.Title,
-                            WorkshopID = scriptData.PublishedFileId,
-                            Code = ""
-                        });
-                    }
-
+                    ScriptManagerPlugin.Instance.Config.Whitelist.Add(script);
                 }
+
             }
-            Status.StatusMessage += "\n\n" + statusMsg;
+            Status.StatusMessage += "\n>" + statusMsg;
 
             await Task.Delay(delay);
             Status.IsInProgress = false;
@@ -144,10 +121,7 @@ namespace ScriptManager.Ui
 
         private void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            Log.Info($"Notifying property change of {e.PropertyName}");
             PropertyChanged?.Invoke(this, e);
-            if (PropertyChanged == null)
-                Log.Warn("Property Changed handler is null!");
         }
     }
 }
