@@ -99,23 +99,35 @@ namespace ScriptManager.Ui
                 var scriptPath = GetScriptPath();
                 if( MyFileSystem.FileExists(scriptPath) )
                 {
-                    return File.ReadAllText(scriptPath);
+                    var code = File.ReadAllText(scriptPath);
+                    if(code == null)
+                    {
+                        Log.Warn($"Error reading script '{Name}' (Id: {Id})!");
+                        return "";
+                    }
+                    return code;
                 }
                 else
                 {
-                    Log.Warn($"Script code could not be found for script '{Name}' (Id: {Id})!\n");
+                    Log.Warn($"Script code could not be found for script '{Name}' (Id: {Id})!");
                     return "";
                 }
             }
             set
             {
+                if (value == null)
+                {
+                    Log.Warn("Received invalid value for script code!");
+                    return;
+                }
+
                 var scriptPath = GetScriptPath();
                 var code = value.Replace("\r\n", " \n");
                 Directory.CreateDirectory(Path.GetDirectoryName(scriptPath));
                 File.WriteAllText(scriptPath, value);
                 MD5Hash = Util.GetMD5Hash(value);
                 OnPropertyChanged();
-                UpdateRunning();
+                //UpdateRunning();
             }
         }
 
@@ -148,6 +160,7 @@ namespace ScriptManager.Ui
         }
 
         private ObservableCollection<long> _programmableBlocks = new ObservableCollection<long>();
+
         [XmlIgnore]
         public ObservableCollection<long> ProgrammableBlocks
         {
@@ -276,7 +289,19 @@ namespace ScriptManager.Ui
                 throw new Exception("An error occured while downloading script code: \n" + e.Message);
             }
 
-            Code = ReadScriptFromArchive();
+            string code = null;
+            var readTask = Task.Run(delegate
+            {
+                code = ReadScriptFromArchive();
+            });
+            if (await Task.WhenAny(readTask, Task.Delay(10000)) == readTask)
+            {
+                Code = code;
+            }
+            else
+            {
+                throw new Exception($"An error occured while reading downloaded script '{Name}'!");
+            }
         }
 
         public void Delete()
@@ -291,12 +316,23 @@ namespace ScriptManager.Ui
 
         private void UpdateRunning()
         {
+            long pbId;
             var code = Code;
-            foreach(var pbId in ProgrammableBlocks )
+            List<int> removeList = new List<int>();
+            for (int i = 0; i < ProgrammableBlocks.Count; i++ )
             {
+                pbId = ProgrammableBlocks[i];
                 if (MyAPIGateway.Entities.GetEntityById(pbId) is IMyProgrammableBlock pb)
                     pb.ProgramData = code;
+                else
+                {
+                    Log.Warn($"Programmable block running script '{Name}' not found, removing from list...");
+                    removeList.Add(i);
+                }
             }
+            foreach (var index in removeList)
+                ProgrammableBlocks.RemoveAtFast(index);
+
         }
 
         private string GetScriptPath()

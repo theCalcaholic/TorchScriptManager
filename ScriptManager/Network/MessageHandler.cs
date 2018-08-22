@@ -177,9 +177,9 @@ namespace ScriptManager.Network
 
             Log.Info(string.Format("Received recompilation request for pb '{0}'", pb.CustomName));
 
-            if (pb.Storage == null)
+            /*if (pb.Storage == null)
                 pb.Storage = new MyModStorageComponent();
-            pb.Storage[Config.GUID] = scriptId.ToString();
+            pb.Storage[Config.GUID] = scriptId.ToString();*/
 
             var script = ScriptManagerPlugin.Instance.Config.Whitelist.FirstOrDefault((item) => item.Id == scriptId);
             if (script == null)

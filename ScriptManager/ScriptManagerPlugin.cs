@@ -63,6 +63,12 @@ namespace ScriptManager
         //private long ModMessageHandlerId = 36235;
         //private long PluginMessageHandlerId = 59300040;
 
+#if DEBUG
+        public const long MOD_ID = 1478287109; // testing version
+#else
+        public const long MOD_ID = 1470445959; // stable version
+#endif
+
         public ScriptManagerConfig Config => _config?.Data;
 
         public static string ScriptsPath { get; private set; }
@@ -119,7 +125,7 @@ namespace ScriptManager
             __result.Checkpoint.Mods = __result.Checkpoint.Mods.ToList();
 
             if( Instance.Config.Enabled )
-                __result.Checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(Common.Config.MOD_ID));
+                __result.Checkpoint.Mods.Add(new MyObjectBuilder_Checkpoint.ModItem(MOD_ID));
 
         }
 
@@ -147,22 +153,18 @@ namespace ScriptManager
             if (faction != null && faction.IsEveryoneNpc() && !faction.AcceptHumans)
                 return true;
 
-            if (Instance.Config.RunningScripts.ContainsKey(pb.EntityId))
-            {
-                Instance.Config.RunningScripts[pb.EntityId].ProgrammableBlocks.Remove(pb.EntityId);
-                Instance.Config.RunningScripts.Remove(pb.EntityId);
-            }
-
 
             //program = program.Replace(" \r", "");
+            var whitelist = Instance.Config.Whitelist;
+            var runningScripts = Instance.Config.RunningScripts;
             var scriptHash = Util.GetMD5Hash(program);
             var comparer = StringComparer.OrdinalIgnoreCase;
-            foreach (var script in Instance.Whitelist)
+            foreach (var script in whitelist)
             {
                 if (script.Enabled && comparer.Compare(scriptHash, script.MD5Hash) == 0)
                 {
                     script.ProgrammableBlocks.Add(pb.EntityId);
-                    Instance.Config.RunningScripts[pb.EntityId] = script;
+                    runningScripts[pb.EntityId] = script;
                     Log.Info("Script found on whitelist! Compiling...");
                     return true;
                 }
@@ -199,11 +201,21 @@ namespace ScriptManager
 
             //MyMultiplayer.RaiseEvent<MyProgrammableBlock>(__instance, (MyProgrammableBlock x) => x.WriteProgramResponse, msg, default(EndpointId));
 
-            if( Instance.Config.RunningScripts.ContainsKey(pb.EntityId) )
+            if (runningScripts.ContainsKey(pb.EntityId))
             {
-                (pb as Sandbox.ModAPI.IMyProgrammableBlock).ProgramData = Instance.Config.RunningScripts[pb.EntityId].Code;
-                Log.Info($"PB '{pb.EntityId}' seems to be outdated, updating code (script = {Instance.Config.RunningScripts[pb.EntityId].Name})...");
-                return false;
+
+                if (whitelist.Contains(runningScripts[pb.EntityId]))
+                {
+                    (pb as Sandbox.ModAPI.IMyProgrammableBlock).ProgramData = runningScripts[pb.EntityId].Code;
+                    Log.Info($"PB '{pb.EntityId}' seems to be outdated, updating code (script = {runningScripts[pb.EntityId].Name})...");
+                    return false;
+                }
+                else
+                {
+                    runningScripts[pb.EntityId]?.ProgrammableBlocks.Remove(pb.EntityId);
+                    runningScripts.Remove(pb.EntityId);
+                    
+                }
             }
 
             var msg = "Script is not whitelisted. Compilation rejected!";
@@ -253,26 +265,18 @@ namespace ScriptManager
             switch (newState)
             {
                 case TorchSessionState.Loading:
-                    Log.Info("Updating all scripts...");
-                    List<Task> taskList = new List<Task>();
-                    Config.Whitelist.ForEach((ScriptEntry script) =>
-                    {
-                        if( script.KeepUpdated )
-                            taskList.Add(script.UpdateFromWorkshopAsync());
-                    });
-                    Task.WaitAll(taskList.ToArray());
-                    /*if( Config.Enabled )
-                        MyAPIGateway.Session.Mods.Add(
-                            new MyObjectBuilder_Checkpoint.ModItem(
-                                "1470445959.sbm", 
-                                1470445959, 
-                                "ScriptManager Client Mod"));*/
                     //Executed before the world loads.
                     break;
                 case TorchSessionState.Loaded:
                     MessageHandler.SetupMessaging();
-                    //SendWhitelistToMod();
-                    //MyAPIGateway.Utilities.RegisterMessageHandler(Common.Config.MOD_ID, OnModReady);
+                    Log.Info("Asynchronously updating all scripts...");
+                    List<Task> taskList = new List<Task>();
+                    Config.Whitelist.ForEach((ScriptEntry script) =>
+                    {
+                        if (script.KeepUpdated)
+                            taskList.Add(script.UpdateFromWorkshopAsync());
+                    });
+                    //Task.WaitAll(taskList.ToArray());
                     //Executed after the world has loaded.
                     break;
                 case TorchSessionState.Unloading:
