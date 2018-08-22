@@ -103,13 +103,14 @@ namespace ScriptManager.Ui
                 }
                 else
                 {
-                    Log.Error($"Script code could not be found for script '{Name}' (Id: {Id})!\n");
+                    Log.Warn($"Script code could not be found for script '{Name}' (Id: {Id})!\n");
                     return "";
                 }
             }
             set
             {
                 var scriptPath = GetScriptPath();
+                Directory.CreateDirectory(Path.GetDirectoryName(scriptPath));
                 File.WriteAllText(scriptPath, value);
                 MD5Hash = Util.GetMD5Hash(value);
                 OnPropertyChanged();
