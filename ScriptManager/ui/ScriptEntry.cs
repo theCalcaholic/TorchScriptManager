@@ -110,6 +110,7 @@ namespace ScriptManager.Ui
             set
             {
                 var scriptPath = GetScriptPath();
+                var code = value.Replace("\r\n", " \n");
                 Directory.CreateDirectory(Path.GetDirectoryName(scriptPath));
                 File.WriteAllText(scriptPath, value);
                 MD5Hash = Util.GetMD5Hash(value);

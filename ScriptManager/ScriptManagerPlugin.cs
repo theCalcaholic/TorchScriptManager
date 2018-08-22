@@ -154,7 +154,7 @@ namespace ScriptManager
             }
 
 
-            program = program.Replace("\r", "");
+            //program = program.Replace(" \r", "");
             var scriptHash = Util.GetMD5Hash(program);
             var comparer = StringComparer.OrdinalIgnoreCase;
             foreach (var script in Instance.Whitelist)
@@ -198,6 +198,13 @@ namespace ScriptManager
             //_instance?.SetDetailedInfo("Script is not whitelisted. Compilation rejected!");
 
             //MyMultiplayer.RaiseEvent<MyProgrammableBlock>(__instance, (MyProgrammableBlock x) => x.WriteProgramResponse, msg, default(EndpointId));
+
+            if( Instance.Config.RunningScripts.ContainsKey(pb.EntityId) )
+            {
+                (pb as Sandbox.ModAPI.IMyProgrammableBlock).ProgramData = Instance.Config.RunningScripts[pb.EntityId].Code;
+                Log.Info($"PB '{pb.EntityId}' seems to be outdated, updating code (script = {Instance.Config.RunningScripts[pb.EntityId].Name})...");
+                return false;
+            }
 
             var msg = "Script is not whitelisted. Compilation rejected!";
             Log.Info(msg);
