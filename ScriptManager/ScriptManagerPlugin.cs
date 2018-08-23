@@ -112,7 +112,6 @@ namespace ScriptManager
             {
                 string code = "";
                 code = script.Code;
-                Log.Info($"Got code of length {code.Length}");
                 script.MD5Hash = Util.GetMD5Hash(code);
             }
         }
@@ -171,9 +170,7 @@ namespace ScriptManager
             {
                 if (script.Enabled && comparer.Compare(scriptHash, script.MD5Hash) == 0)
                 {
-                    if(!script.ProgrammableBlocks.Contains(pb.EntityId))
-                        script.ProgrammableBlocks.Add(pb.EntityId);
-                    runningScripts[pb.EntityId] = script;
+                    Instance.Config.AddRunningScript(pb.EntityId, script);
                     Log.Info("Script found on whitelist! Compiling...");
                     return true;
                 }
@@ -282,8 +279,7 @@ namespace ScriptManager
                     {
                         if (script.Enabled)
                             foreach (var pbId in script.ProgrammableBlocks)
-                                if (!Config.RunningScripts.ContainsKey(pbId))
-                                    Config.RunningScripts[pbId] = script;
+                                Config.AddRunningScript(pbId, script);
                         if (script.KeepUpdated)
                             taskList.Add(script.UpdateFromWorkshopAsync());
                     }

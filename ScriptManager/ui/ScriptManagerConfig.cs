@@ -59,6 +59,15 @@ namespace ScriptManager.Ui
 
         }
 
+        public void AddRunningScript(long pbId, ScriptEntry script)
+        {
+            if (RunningScripts.ContainsKey(pbId))
+                RunningScripts[pbId].ProgrammableBlocks.Remove(pbId);
+            if (!script.ProgrammableBlocks.Contains(pbId))
+                script.ProgrammableBlocks.Add(pbId);
+            RunningScripts[pbId] = script;
+        }
+
         private void OnScriptEntryChanged(object sender, PropertyChangedEventArgs e)
         {
             ScriptEntryChanged?.Invoke(sender, e);

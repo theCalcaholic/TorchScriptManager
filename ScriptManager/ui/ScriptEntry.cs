@@ -72,7 +72,6 @@ namespace ScriptManager.Ui
                     if(pos != -1)
                         assignedIds.RemoveAt(pos);
                     _id = value;
-                    Log.Info($"Value was {value}; nextId was {nextId}");
                     //Log.Info($"new nextId is {nextId}");
                 }
                 assignedIds.Add(_id);
@@ -404,14 +403,9 @@ namespace ScriptManager.Ui
             for (id = 0; id <= long.MaxValue; id++)
             {
                 if (!assignedIds.Contains(id))
-                {
-                    Log.Info($"Found valid id: {id}!");
-                    break;
-                }
+                    return id;
             }
-            if (id == long.MaxValue)
-                throw new Exception("Can't assign id: Maximum number of scripts reached!");
-            return id;
+            throw new Exception("Can't assign id: Maximum number of scripts reached!");
         }
     }
 
