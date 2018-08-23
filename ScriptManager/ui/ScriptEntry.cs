@@ -30,8 +30,6 @@ namespace ScriptManager.Ui
         private bool _enabled;
         private static long nextId = 0;
         private static List<long> assignedIds = new List<long>();
-        public bool PBsNeedUpdate = false;
-        //private bool _needsUpdate = true;
 
         private long _id;
 
@@ -114,6 +112,9 @@ namespace ScriptManager.Ui
         {
             get
             {
+                if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
+                    return "";
+
                 var scriptPath = GetScriptPath();
                 if( MyFileSystem.FileExists(scriptPath) )
                 {
@@ -133,6 +134,9 @@ namespace ScriptManager.Ui
             }
             set
             {
+                if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
+                    return;
+
                 if (value == null)
                 {
                     Log.Warn("Received invalid value for script code!");
@@ -144,7 +148,6 @@ namespace ScriptManager.Ui
                 Directory.CreateDirectory(Path.GetDirectoryName(scriptPath));
                 File.WriteAllText(scriptPath, value);
                 MD5Hash = Util.GetMD5Hash(value);
-                PBsNeedUpdate = true;
                 OnPropertyChanged();
                 //UpdateRunning();
             }
@@ -347,7 +350,6 @@ namespace ScriptManager.Ui
             }
             foreach (var index in removeList)
                 ProgrammableBlocks.RemoveAtFast(index);
-            PBsNeedUpdate = false;
 
         }
 

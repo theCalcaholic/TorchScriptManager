@@ -24,6 +24,9 @@ namespace ScriptManager.Ui
         [XmlIgnore]
         public Dictionary<long, ScriptEntry> RunningScripts = new Dictionary<long, ScriptEntry>();
 
+        [XmlIgnore]
+        public bool SaveLoadMode = true;
+
         public bool Enabled
         {
             get => _enabled;

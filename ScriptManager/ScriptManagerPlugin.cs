@@ -93,7 +93,7 @@ namespace ScriptManager
             ScriptsPath = Path.Combine(StoragePath, "Scripts");
 
             _config = Persistent<ScriptManagerConfig>.Load(Path.Combine(StoragePath, "ScriptManager.cfg"));
-
+            _config.Data.SaveLoadMode = false;
 
             _sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
             if (_sessionManager != null)
@@ -258,7 +258,9 @@ namespace ScriptManager
 
         public void Save()
         {
+            Config.SaveLoadMode = true;
             _config.Save();
+            Config.SaveLoadMode = false;
         }
 
         private void OnSessionStateChanged(ITorchSession session, TorchSessionState newState)
