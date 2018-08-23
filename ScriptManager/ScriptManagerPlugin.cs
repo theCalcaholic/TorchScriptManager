@@ -107,6 +107,14 @@ namespace ScriptManager
             Instance = this;
 
             MessageHandler.Init();
+
+            foreach (var script in _config.Data.Whitelist)
+            {
+                string code = "";
+                code = script.Code;
+                Log.Info($"Got code of length {code.Length}");
+                script.MD5Hash = Util.GetMD5Hash(code);
+            }
         }
 
         static public void PatchModlist(PatchContext context)
