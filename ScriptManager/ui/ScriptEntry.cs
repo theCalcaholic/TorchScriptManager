@@ -106,6 +106,7 @@ namespace ScriptManager.Ui
             }
         }
 
+        private string _code = null;
         //[XmlIgnore]
         public string Code
         {
@@ -113,6 +114,12 @@ namespace ScriptManager.Ui
             {
                 if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
                     return "";
+
+                if (_code != null)
+                {
+                    Code = _code;
+                    _code = null;
+                }
 
                 var scriptPath = GetScriptPath();
                 if( MyFileSystem.FileExists(scriptPath) )
@@ -134,7 +141,14 @@ namespace ScriptManager.Ui
             set
             {
                 if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
+                {
+                    if( value != "" )
+                    {
+                        _code = value;
+                        Log.Info($"Found script in cfg: \n'{_code}', length: {_code.Length}");
+                    }
                     return;
+                }
 
                 if (value == null)
                 {
