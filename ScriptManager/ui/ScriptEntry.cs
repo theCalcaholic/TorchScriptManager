@@ -30,6 +30,7 @@ namespace ScriptManager.Ui
         private bool _enabled;
         private static long nextId = 0;
         private static List<long> assignedIds = new List<long>();
+        public bool PBsNeedUpdate = false;
         //private bool _needsUpdate = true;
 
         private long _id;
@@ -48,20 +49,37 @@ namespace ScriptManager.Ui
             get => _id;
             set
             {
+                if( value == _id)
+                {
+                    if (!assignedIds.Contains(value))
+                        assignedIds.Add(value);
+                    return;
+                }
+
+                var code = Code;
+
                 if (assignedIds.Contains(value))
                 {
-                    Log.Warn("Duplicate script id! Id will be changed.");
-                    _id = nextId++;
+                    if (assignedIds.Contains(value))
+                        Log.Warn($"A script with id {value} already exists! Current id ({_id}) will be kept.");
+                    else
+                    {
+                        Log.Warn($"A script with id {value} already exists! Will retrieve new valid id isntead.");
+                        _id = GetValidId();
+                    }
                 }
                 else
                 {
                     var pos = assignedIds.IndexOf(_id);
-                    if (pos != -1)
+                    if(pos != -1)
                         assignedIds.RemoveAt(pos);
                     _id = value;
-                    nextId = Math.Max(nextId, value + 1);
+                    Log.Info($"Value was {value}; nextId was {nextId}");
+                    //Log.Info($"new nextId is {nextId}");
                 }
+                assignedIds.Add(_id);
 
+                Code = code;
                 MD5Hash = Util.GetMD5Hash(Code);
                 OnPropertyChanged();
             }
@@ -126,6 +144,7 @@ namespace ScriptManager.Ui
                 Directory.CreateDirectory(Path.GetDirectoryName(scriptPath));
                 File.WriteAllText(scriptPath, value);
                 MD5Hash = Util.GetMD5Hash(value);
+                PBsNeedUpdate = true;
                 OnPropertyChanged();
                 //UpdateRunning();
             }
@@ -161,7 +180,6 @@ namespace ScriptManager.Ui
 
         private ObservableCollection<long> _programmableBlocks = new ObservableCollection<long>();
 
-        [XmlIgnore]
         public ObservableCollection<long> ProgrammableBlocks
         {
             get => _programmableBlocks;
@@ -173,19 +191,16 @@ namespace ScriptManager.Ui
 
         public ScriptEntry()
         {
-            long id;
-            for (id = 0; id <= long.MaxValue; id++)
-            {
-                if (!assignedIds.Contains(id))
-                {
-                    _id = id;
-                    break;
-                }
-            }
-            if (id == long.MaxValue)
-                throw new Exception("Can't assign id: Maximum number of scripts reached!");
+            Id = GetValidId();
 
-            _programmableBlocks.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => {
+            var script = this;
+            ProgrammableBlocks.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => {
+                /*if (e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Replace)
+                    foreach (long pbId in e.OldItems)
+                        ScriptManagerPlugin.Instance.Config.RunningScripts.Remove(pbId);
+                if (e.Action == NotifyCollectionChangedAction.Replace || e.Action == NotifyCollectionChangedAction.Add)
+                    foreach (long pbId in e.OldItems)
+                        ScriptManagerPlugin.Instance.Config.RunningScripts[pbId] = script;*/
                 OnPropertyChanged("InstallCount");
             };
         }
@@ -314,7 +329,7 @@ namespace ScriptManager.Ui
                 File.Delete(scriptWSPath);
         }
 
-        private void UpdateRunning()
+        public void UpdateRunning()
         {
             long pbId;
             var code = Code;
@@ -332,6 +347,7 @@ namespace ScriptManager.Ui
             }
             foreach (var index in removeList)
                 ProgrammableBlocks.RemoveAtFast(index);
+            PBsNeedUpdate = false;
 
         }
 
@@ -378,6 +394,22 @@ namespace ScriptManager.Ui
             }
 
             return File.GetLastWriteTimeUtc(scriptPath) >= script.TimeUpdated;
+        }
+
+        private long GetValidId()
+        {
+            long id;
+            for (id = 0; id <= long.MaxValue; id++)
+            {
+                if (!assignedIds.Contains(id))
+                {
+                    Log.Info($"Found valid id: {id}!");
+                    break;
+                }
+            }
+            if (id == long.MaxValue)
+                throw new Exception("Can't assign id: Maximum number of scripts reached!");
+            return id;
         }
     }
 

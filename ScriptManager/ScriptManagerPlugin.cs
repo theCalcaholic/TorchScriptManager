@@ -163,7 +163,8 @@ namespace ScriptManager
             {
                 if (script.Enabled && comparer.Compare(scriptHash, script.MD5Hash) == 0)
                 {
-                    script.ProgrammableBlocks.Add(pb.EntityId);
+                    if(!script.ProgrammableBlocks.Contains(pb.EntityId))
+                        script.ProgrammableBlocks.Add(pb.EntityId);
                     runningScripts[pb.EntityId] = script;
                     Log.Info("Script found on whitelist! Compiling...");
                     return true;
@@ -265,17 +266,21 @@ namespace ScriptManager
             switch (newState)
             {
                 case TorchSessionState.Loading:
-                    //Executed before the world loads.
-                    break;
-                case TorchSessionState.Loaded:
-                    MessageHandler.SetupMessaging();
                     Log.Info("Asynchronously updating all scripts...");
                     List<Task> taskList = new List<Task>();
-                    Config.Whitelist.ForEach((ScriptEntry script) =>
+                    foreach (var script in Config.Whitelist)
                     {
+                        if (script.Enabled)
+                            foreach (var pbId in script.ProgrammableBlocks)
+                                if (!Config.RunningScripts.ContainsKey(pbId))
+                                    Config.RunningScripts[pbId] = script;
                         if (script.KeepUpdated)
                             taskList.Add(script.UpdateFromWorkshopAsync());
-                    });
+                    }
+                    break;
+                //Executed before the world loads.
+                case TorchSessionState.Loaded:
+                    MessageHandler.SetupMessaging();
                     //Task.WaitAll(taskList.ToArray());
                     //Executed after the world has loaded.
                     break;
