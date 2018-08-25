@@ -48,8 +48,11 @@ namespace ScriptManager.ClientMod
             ModLogger.Info(string.Format("Whitelist received from server ({0} scripts):", receivedScripts.Count));
             foreach (var script in receivedScripts)
             {
-                ModLogger.Info("    " + script.Value);
-                WhitelistData.Scripts[script.Key] = script.Value;
+                if (action == ListUpdateAction.ADD)
+                    WhitelistData.Scripts[script.Key] = script.Value;
+                else if (action == ListUpdateAction.REMOVE && WhitelistData.Scripts.ContainsKey(script.Key))
+                    WhitelistData.Scripts.Remove(script.Key);
+                ModLogger.Info($"    [{action}] {script.Value}");
             }
         }
 

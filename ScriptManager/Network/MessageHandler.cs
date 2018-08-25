@@ -24,7 +24,7 @@ namespace ScriptManager.Network
         private static readonly Logger Log = LogManager.GetLogger("ScriptManager");
         private static bool initialized = false;
         private static bool messagingReady = false;
-        private static Dictionary<long, string> scripts = new Dictionary<long, string>();
+        private static Dictionary<long, string> m_scripts = new Dictionary<long, string>();
 
         public static void Init()
         {
@@ -34,8 +34,15 @@ namespace ScriptManager.Network
             ScriptManagerPlugin.Instance.Config.ScriptEntryChanged += OnScriptEntryUpdate;
             ScriptManagerPlugin.Instance.Config.Whitelist.CollectionChanged += UpdateWhitelist;
             foreach (var script in ScriptManagerPlugin.Instance.Config.Whitelist)
-                if( script.Enabled )
-                    scripts[script.Id] = script.Name;
+                if (script.Enabled)
+                {
+                    m_scripts[script.Id] = script.Name;
+                    Log.Info($"Script {script.Name} is whitelisted, adding to list...");
+                }
+                else
+                {
+                    Log.Info($"Script {script.Name} is not whitelisted, not adding to list...");
+                }
 
             initialized = true;
 
@@ -163,7 +170,7 @@ namespace ScriptManager.Network
             var request = new WhitelistActionRequest(
                 MyAPIGateway.Multiplayer.MyId,
                 ListUpdateAction.ADD,
-                scripts);
+                m_scripts);
             NetworkUtil.SendToClient(clientId, request);
         }
 
@@ -192,32 +199,40 @@ namespace ScriptManager.Network
 
         private static void UpdateWhitelist(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if( e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Replace || e.Action == NotifyCollectionChangedAction.Reset)
-            {
-                foreach(var item in e.OldItems)
-                {
-                    var scriptId = (item as ScriptEntry).Id;
-                    if ( scripts.ContainsKey(scriptId) )
-                    scripts.Remove(scriptId);
-                }
-            }
 
-            if( e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Replace )
+            ListUpdateAction action = ListUpdateAction.ADD;
+            Dictionary<long, string> scripts = new Dictionary<long, string>();
+
+            if( e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                foreach (var item in e.OldItems)
+                {
+                    var script = (item as ScriptEntry);
+                    if (m_scripts.ContainsKey(script.Id))
+                    {
+                        m_scripts.Remove(script.Id);
+                        scripts[script.Id] = script.Name;
+                    }
+                }
+                action = ListUpdateAction.REMOVE;
+            }
+            else if( e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Replace )
             {
                 foreach(var item in e.NewItems)
                 {
                     var script = (item as ScriptEntry);
+                    m_scripts[script.Id] = script.Name;
                     scripts[script.Id] = script.Name;
                 }
+                action = ListUpdateAction.ADD;
+            }
+            else
+            {
+                return;
             }
 
             if(messagingReady)
             {
-                ListUpdateAction action = ListUpdateAction.ADD;
-
-                if (e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Reset)
-                    action = ListUpdateAction.REMOVE;
-
                 var request = new WhitelistActionRequest(
                     MyAPIGateway.Multiplayer.MyId,
                     action, scripts);
@@ -228,8 +243,23 @@ namespace ScriptManager.Network
         private static void OnScriptEntryUpdate(object sender, PropertyChangedEventArgs e)
         {
             var script = sender as ScriptEntry;
-            if (e.PropertyName == nameof(ScriptEntry.Name) && scripts.ContainsKey(script.Id))
-                scripts[script.Id] = script.Name;
+            if (e.PropertyName == nameof(ScriptEntry.Name) || e.PropertyName == nameof(ScriptEntry.Enabled))
+            {
+                if (!script.Enabled && m_scripts.ContainsKey(script.Id))
+                {
+                    Log.Info($"Script {script.Name} disabled, removing...");
+                    UpdateWhitelist(ScriptManagerPlugin.Instance.Config.Whitelist,
+                        new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, script));
+                    //scripts.Remove(script.Id);
+                }
+                else if( script.Enabled )
+                {
+                    Log.Info($"Script {script.Name} added or changed, updating...");
+                    UpdateWhitelist(ScriptManagerPlugin.Instance.Config.Whitelist,
+                        new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, script));
+                    //scripts[script.Id] = script.Name;
+                }
+            }
 
         }
     }

@@ -15,7 +15,7 @@ using SteamWorkshopTools.Types;
 
 namespace SteamWorkshopTools
 {
-    public class SteamWorkshopService
+    public class WebAPI
     {
         private static Logger Log = LogManager.GetLogger("SteamWorkshopService");
         public const uint AppID = 244850U;
@@ -29,16 +29,16 @@ namespace SteamWorkshopTools
         private CallbackManager cbManager;
         private SteamUser steamUser;
 
-        private static SteamWorkshopService _instance;
-        public static SteamWorkshopService Instance
+        private static WebAPI _instance;
+        public static WebAPI Instance
         {
             get
             {
-                return _instance ?? (_instance = new SteamWorkshopService());
+                return _instance ?? (_instance = new WebAPI());
             }
         }
 
-        private SteamWorkshopService()
+        private WebAPI()
         {
             steamClient = new SteamClient();
             cbManager = new CallbackManager(steamClient);
@@ -82,7 +82,7 @@ namespace SteamWorkshopTools
             //if (!IsReady)
             //    throw new Exception("SteamWorkshopService not initialized!");
 
-            using (dynamic remoteStorage = WebAPI.GetInterface("ISteamRemoteStorage"))
+            using (dynamic remoteStorage = SteamKit2.WebAPI.GetInterface("ISteamRemoteStorage"))
             {
                 KeyValue allFilesDetails = null ;
                 remoteStorage.Timeout = TimeSpan.FromSeconds(30);
@@ -91,7 +91,7 @@ namespace SteamWorkshopTools
                     allFilesDetails = await Task.Run(delegate { return remoteStorage.GetPublishedFileDetails1(itemcount: 1, publishedfileids: workshopIds, method: HttpMethod.Post); });
                     //fileDetails = remoteStorage.Call(HttpMethod.Post, "GetPublishedFileDetails", 1, new Dictionary<string, string>() { { "itemcount", workshopIds.Count().ToString() }, { "publishedfileids", workshopIds.ToString() } });
                 }
-                catch( HttpRequestException e )
+                catch(HttpRequestException e )
                 {
                     Log.Error($"Fetching File Details failed: {e.Message}");
                     return null;

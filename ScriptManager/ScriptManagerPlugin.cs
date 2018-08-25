@@ -106,14 +106,14 @@ namespace ScriptManager
             //Your init code here, the game is not initialized at this point.
             Instance = this;
 
-            MessageHandler.Init();
-
             foreach (var script in _config.Data.Whitelist)
             {
                 string code = "";
                 code = script.Code;
                 script.MD5Hash = Util.GetMD5Hash(code);
             }
+
+            MessageHandler.Init();
         }
 
         static public void PatchModlist(PatchContext context)
