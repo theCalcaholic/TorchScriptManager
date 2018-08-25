@@ -221,8 +221,11 @@ namespace ScriptManager.Network
                 foreach(var item in e.NewItems)
                 {
                     var script = (item as ScriptEntry);
-                    m_scripts[script.Id] = script.Name;
-                    scripts[script.Id] = script.Name;
+                    if(script.Enabled)
+                    {
+                        m_scripts[script.Id] = script.Name;
+                        scripts[script.Id] = script.Name;
+                    }
                 }
                 action = ListUpdateAction.ADD;
             }
@@ -230,6 +233,9 @@ namespace ScriptManager.Network
             {
                 return;
             }
+
+            if (scripts.Count == 0)
+                return;
 
             if(messagingReady)
             {
