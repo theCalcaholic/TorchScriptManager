@@ -26,16 +26,18 @@ using VRage.Game.Components;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Compiler;
 using VRage.Game;
+using VRage.Game.ModAPI;
 using VRage.Scripting;
 using VRage.Utils;
 using VRage.Network;
 using VRageMath;
 using VRage.Collections;
-using Sandbox.ModAPI.Ingame;
+//using Sandbox.ModAPI.Ingame;
 using Sandbox.Game.Entities;
 using Sandbox.Common.ObjectBuilders;
 using VRage.Game.ModAPI.Ingame;
 using Sandbox.Game.EntityComponents;
+using Sandbox.Game;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using Sandbox.Game.Entities.Blocks;
 using Sandbox.Engine.Multiplayer;
@@ -59,7 +61,6 @@ namespace ScriptManager
         private Persistent<ScriptManagerConfig> _config;
 
         private ScriptManagerUserControl _control;
-        private bool IsClientModReady = false;
         //private long ModMessageHandlerId = 36235;
         //private long PluginMessageHandlerId = 59300040;
 
@@ -155,9 +156,7 @@ namespace ScriptManager
 
             // exclude npc factions
             var pb = (__instance as MyProgrammableBlock);
-            var factionTag = pb.GetOwnerFactionTag();
-            var faction = MyAPIGateway.Session.Factions.TryGetFactionByTag(factionTag);
-            if (faction != null && faction.IsEveryoneNpc() && !faction.AcceptHumans)
+            if(CanBypassWhitelist(pb))
                 return true;
 
 
@@ -209,12 +208,17 @@ namespace ScriptManager
 
             if (runningScripts.ContainsKey(pb.EntityId))
             {
-
-                if (whitelist.Contains(runningScripts[pb.EntityId]))
+                var script = runningScripts[pb.EntityId];
+                
+                if (runningScripts[pb.EntityId] != null
+                    && whitelist.Contains(runningScripts[pb.EntityId]))
                 {
-                    (pb as Sandbox.ModAPI.IMyProgrammableBlock).ProgramData = runningScripts[pb.EntityId].Code;
-                    Log.Info($"PB '{pb.EntityId}' seems to be outdated, updating code (script = {runningScripts[pb.EntityId].Name})...");
-                    return false;
+                    if (comparer.Compare(scriptHash, script.MD5Hash) != 0)
+                    {
+                        Log.Info($"PB '{pb.EntityId}' seems to be outdated, updating code (script = {runningScripts[pb.EntityId].Name})...");
+                        (pb as IMyProgrammableBlock).ProgramData = runningScripts[pb.EntityId].Code;
+                        return false;
+                    }
                 }
                 else
                 {
@@ -236,6 +240,26 @@ namespace ScriptManager
             {
                 setDetailedInfo.Invoke(__instance, new object[] { msg });
             });
+
+            return false;
+        }
+
+        static private bool CanBypassWhitelist(IMyProgrammableBlock pb)
+        {
+            var shareMode = ((MyCubeBlock)pb).IDModule.ShareMode;
+            if ( shareMode == MyOwnershipShareModeEnum.All )
+                return false;
+
+            if (!MySession.Static.Players.IdentityIsNpc(pb.OwnerId))
+                return false;
+
+            var factionTag = pb.GetOwnerFactionTag();
+            var faction = MyAPIGateway.Session.Factions.TryGetFactionByTag(factionTag);
+            if (faction == null)
+                return true;
+
+            if( shareMode == MyOwnershipShareModeEnum.None || (faction.IsEveryoneNpc() && !faction.AcceptHumans))
+                return true;
 
             return false;
         }
@@ -299,7 +323,6 @@ namespace ScriptManager
 
         private void OnModReady(object data)
         {
-            IsClientModReady = true;
             SendWhitelistToMod();
         }
 
