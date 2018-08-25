@@ -11,7 +11,7 @@
         <local:ScriptData/>
     </Window.DataContext>
     <Window.Resources>
-        <local:WPFConverters x:Key="Multiply"/>
+        <local:MultiplyConverter x:Key="Multiply"/>
         <local:InvertBooleanConverter x:Key="Negate"/>
     </Window.Resources>
     <Grid VerticalAlignment="Stretch">
@@ -63,27 +63,28 @@
                 </Style>
             </Label.Style>
         </Label>
-        <Label Name="WorkshopIDEditor"
+        <TextBox Name="WorkshopIDEditor"
                Width="100"
                Margin="0 12"
                Padding="0"
                Height="{Binding FontSize, RelativeSource={RelativeSource Self}, Converter={StaticResource Multiply}, ConverterParameter=1.5}"
-               Content="{Binding WorkshopID}"
+               Text="{Binding WorkshopID}"
                BorderThickness="1"
                BorderBrush="DarkGray"
                Background="#E8E8E8"
+               IsReadOnly="True"
                HorizontalAlignment="Left"
                Grid.Row="1" Grid.Column="1">
-            <Label.Style>
-                <Style TargetType="Label">
+            <TextBox.Style>
+                <Style TargetType="TextBox">
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding WorkshopID}" Value="0">
                             <Setter Property="Visibility" Value="Hidden"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
-            </Label.Style>
-        </Label>
+            </TextBox.Style>
+        </TextBox>
         <CheckBox Name="KeepUpdatedCheckBox"
                   IsChecked="{Binding KeepUpdated}"
                   Margin="24 12 6 12"

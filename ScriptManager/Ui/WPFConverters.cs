@@ -5,17 +5,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using NLog;
 
 namespace ScriptManager.Ui
 {
-    public class WPFConverters : IValueConverter
+    public class MultiplyConverter : IValueConverter
     {
+        Logger Log = LogManager.GetLogger("ScriptManager");
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             double factor = 1D;
             if (parameter is string fString)
-                if (Double.TryParse(fString, out double factorParam))
+                if (double.TryParse(fString, NumberStyles.Float, CultureInfo.CreateSpecificCulture("en-US"), out double factorParam))
                     factor = factorParam;
+            Log.Info($"Multiply converter value is: {(double)value}, factor is: {factor}, result is: {((double) value) * factor}");
             return ((double)value) * factor;
         }
 
@@ -23,7 +26,7 @@ namespace ScriptManager.Ui
         {
             double factor = 1D;
             if (parameter is string fString)
-                if (Double.TryParse(fString, out double factorParam))
+                if (Double.TryParse(fString, NumberStyles.Float, CultureInfo.CreateSpecificCulture("en-US"), out double factorParam))
                     factor = factorParam;
             return ((double)value) / factor;
         }

@@ -54,8 +54,7 @@ namespace ScriptManager.Ui
                     }
                 }
             };
-
-        }
+    }
 
         public void HideWorkshopSettings()
         {

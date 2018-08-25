@@ -27,7 +27,7 @@ namespace ScriptManager.Ui
     /// </summary>
     public partial class AddFromWorkshopDialog : Window
     {
-        private static readonly Logger Log = LogManager.GetLogger("ScriptManagerUI");
+        private static readonly Logger Log = LogManager.GetLogger("ScriptManager");
         public ScriptData Result;
         public DownloadStatus Status;
         //public string StatusMessage = "";
@@ -40,6 +40,7 @@ namespace ScriptManager.Ui
             DataContext = Status;
             Status.PropertyChanged += (object sender, PropertyChangedEventArgs e) => { UpdateLayout(); };
             AllowsTransparency = false;
+
         }
 
         public async void AddScript(object sender, RoutedEventArgs e)

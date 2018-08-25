@@ -30,8 +30,10 @@ namespace ScriptManager.Ui
         private bool _enabled;
         private static long nextId = 0;
         private static List<long> assignedIds = new List<long>();
+        public static bool loadingComplete;
 
-        private long _id;
+        [DefaultValue(-1)]
+        private long _id = -1;
 
         public bool Enabled
         {
@@ -47,6 +49,9 @@ namespace ScriptManager.Ui
             get => _id;
             set
             {
+                //Log.Info($"assigned script ids: [{string.Join(", ", assignedIds)}]; id: {value}");
+                if (value == -1)
+                    throw new Exception("Invalid script id! -1 is not a valid script id. Check your ScriptManager.cfg for invalid values!");
                 if( value == _id)
                 {
                     if (!assignedIds.Contains(value))
@@ -106,14 +111,19 @@ namespace ScriptManager.Ui
             }
         }
 
+        public bool ShouldSerializeCode()
+        {
+            return !loadingComplete;
+        }
+
         private string _code = null;
         //[XmlIgnore]
         public string Code
         {
             get
             {
-                if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
-                    return "";
+                //if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
+                //    return "";
 
                 if (_code != null)
                 {
@@ -134,13 +144,14 @@ namespace ScriptManager.Ui
                 }
                 else
                 {
-                    Log.Warn($"Script code could not be found for script '{Name}' (Id: {Id})!");
+                    if( Id != -1 )
+                        Log.Warn($"Script code could not be found for script '{Name}' (Id: {Id})!");
                     return "";
                 }
             }
             set
             {
-                if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
+                /*if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
                 {
                     if( value != "" )
                     {
@@ -148,7 +159,10 @@ namespace ScriptManager.Ui
                         Log.Info($"Found script in cfg: \n'{_code}', length: {_code.Length}");
                     }
                     return;
-                }
+                }*/
+
+                if (!loadingComplete && value == "")
+                    return;
 
                 if (value == null)
                 {
@@ -280,7 +294,7 @@ namespace ScriptManager.Ui
         public async Task<PublishedItemDetails> UpdateDetailsFromWorkshopAsync()
         {
             string statusMsg;
-            var workshopService = SteamWorkshopService.Instance;
+            var workshopService = WebAPI.Instance;
             var scriptData = (await workshopService.GetPublishedFileDetails(new ulong[] { WorkshopID }))?[WorkshopID];
 
             if (scriptData == null)
@@ -310,7 +324,7 @@ namespace ScriptManager.Ui
 
         public async Task UpdateCodeFromWorkshopAsync(PublishedItemDetails fileDetails)
         {
-            var workshopService = SteamWorkshopService.Instance;
+            var workshopService = WebAPI.Instance;
             try
             {
                 await workshopService.DownloadPublishedFile(fileDetails, ScriptManagerPlugin.ScriptsPath, WorkshopID + ".sbs");

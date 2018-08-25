@@ -14,7 +14,7 @@
         <local:DownloadStatus/>
     </Window.DataContext>
     <Window.Resources>
-        <local:WPFConverters x:Key="Multiply"/>
+        <local:MultiplyConverter x:Key="Multiply"/>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -35,6 +35,7 @@
                  Width="100"
                  Height="{Binding FontSize, RelativeSource={RelativeSource Self}, Converter={StaticResource Multiply}, ConverterParameter=1.5}"
                  Margin="12"
+                 MaxLines="1"
                  HorizontalAlignment="Left"
                  Grid.Row="1" Grid.Column="1"/>
         <Button Name="AddButton"
