@@ -24,7 +24,7 @@ namespace ScriptManager.Network
         private static readonly Logger Log = LogManager.GetLogger("ScriptManager");
         private static bool initialized = false;
         private static bool messagingReady = false;
-        private static Dictionary<long, string> m_scripts = new Dictionary<long, string>();
+        private static Dictionary<long, string> m_scripts = new Dictionary<long, string> ();
 
         public static void Init()
         {
@@ -33,15 +33,13 @@ namespace ScriptManager.Network
 
             ScriptManagerPlugin.Instance.Config.ScriptEntryChanged += OnScriptEntryUpdate;
             ScriptManagerPlugin.Instance.Config.Whitelist.CollectionChanged += UpdateWhitelist;
+            ScriptManagerPlugin.Instance.Config.PropertyChanged += OnResetScriptToggled;
+            if (ScriptManagerPlugin.Instance.Config.ResetScriptEnabled)
+                m_scripts[ResetPBScript.Id] = ResetPBScript.Name;
             foreach (var script in ScriptManagerPlugin.Instance.Config.Whitelist)
                 if (script.Enabled)
                 {
                     m_scripts[script.Id] = script.Name;
-                    Log.Info($"Script {script.Name} is whitelisted, adding to list...");
-                }
-                else
-                {
-                    Log.Info($"Script {script.Name} is not whitelisted, not adding to list...");
                 }
 
             initialized = true;
@@ -54,9 +52,13 @@ namespace ScriptManager.Network
             //MyAPIGateway.Utilities.RegisterMessageHandler(Config.MOD_ID, ReceiveWhitelist);
             messagingReady = true;
         }
+
+        public static  void TearDown()
+        {
+            messagingReady = false;
+        }
         private static void ReceiveRemoteRequest(byte[] bytes)
         {
-            Log.Info("Received remote request...");
             RemoteRequest request = null;
             try
             {
@@ -67,7 +69,6 @@ namespace ScriptManager.Network
                 Log.Error(e.Message);
                 return;
             }
-            Log.Info("Successfully deserialized RemoteRequest.");
             if (request.RequestType == RemoteRequestType.CLIENT_REGISTRATION)
             {
                 SendWhitelistToClient(request.Sender);
@@ -77,7 +78,7 @@ namespace ScriptManager.Network
                 var recompileRequest = request as RecompileRequest;
                 if (recompileRequest == null)
                 {
-                    Log.Error("No serialized data (expected RecompileRequest)!");
+                    Log.Error("Request Deserialization: No serialized data (expected RecompileRequest)!");
                     return;
                 }
                 RecompilePB(recompileRequest.PbId, recompileRequest.ScriptId);
@@ -87,65 +88,6 @@ namespace ScriptManager.Network
                 Log.Warn(string.Format("Invalid request type '{0}' to server!", request.RequestType));
             }
         }
-
-        /*private static void ReceiveWhitelist(object data)
-        {
-            if (!MyAPIGateway.Multiplayer.IsServer)
-                return;
-
-            Log.Info("Received whitelist from plugin...");
-            var errorMsg = "Received invalid whitelist data (server): {0}!";
-            var dataList = data as object[];
-            if (dataList == null || dataList.Length != 3)
-            {
-                Log.Error(errorMsg, string.Format("Expected object[3] (but {0})", (dataList == null ? "cast failed" : "had invalid length '" + dataList.Length + "'")));
-                return;
-            }
-            var actionStr = dataList[0] as string;
-            var scriptTitles = dataList[1] as Dictionary<long, string>;
-            var scriptBodies = dataList[2] as Dictionary<long, string>;
-            if (actionStr == null
-                || scriptTitles == null
-                || scriptBodies == null)
-            {
-                Log.Error(errorMsg, "First object needs to be a string and the 2nd and 3rd object need to be of type Dictionary<long, string>");
-                return;
-            }
-            ListUpdateAction action = ListUpdateAction.ADD;
-            if (!Enum.TryParse(actionStr, out action))
-            {
-                Log.Error(errorMsg, "Invalid action string");
-                return;
-            }
-
-            if (action == ListUpdateAction.ADD)
-            {
-                Log.Info("Adding scripts to whitelist...");
-                foreach (var k in scriptTitles.Keys)
-                {
-                    Log.Info("    {0}: {1}", k, scriptTitles[k]);
-                    if (k != -1)
-                    {
-                        WhitelistData.Scripts[k] = scriptTitles[k];
-                        WhitelistData.ScriptBodies[k] = scriptBodies[k];
-                    }
-                }
-            }
-            else if (action == ListUpdateAction.REMOVE)
-            {
-                Log.Info("Removing scripts to whitelist...");
-                foreach (var k in scriptTitles.Keys)
-                {
-                    Log.Info("    {0}: {1}", k, scriptTitles[k]);
-                    if (WhitelistData.Scripts.ContainsKey(k) && k != -1)
-                    {
-                        WhitelistData.Scripts.Remove(k);
-                        WhitelistData.ScriptBodies.Remove(k);
-                    }
-                }
-            }
-
-        }*/
 
         public static void Broadcast(RemoteRequest payload)
         {
@@ -162,9 +104,6 @@ namespace ScriptManager.Network
 
         public static void SendWhitelistToClient(ulong clientId)
         {
-            if (!MyAPIGateway.Multiplayer.IsServer)
-                return;
-
             Log.Info("Sending whitelist to client '{0}'...", clientId);
 
             var request = new WhitelistActionRequest(
@@ -182,11 +121,23 @@ namespace ScriptManager.Network
 
             var pb = MyAPIGateway.Entities.GetEntityById(pbId) as IMyProgrammableBlock;
 
-            Log.Info(string.Format("Received recompilation request for pb '{0}'", pb.CustomName));
+            Log.Debug(string.Format("Received recompilation request for pb '{0}'", pb.CustomName));
 
             /*if (pb.Storage == null)
                 pb.Storage = new MyModStorageComponent();
             pb.Storage[Config.GUID] = scriptId.ToString();*/
+
+            if( scriptId == -1)
+            {
+                pb.ProgramData = "";
+                return;
+            }
+
+            if (scriptId == ResetPBScript.Id)
+            {
+                pb.ProgramData = ResetPBScript.Code;
+                return;
+            }
 
             var script = ScriptManagerPlugin.Instance.Config.Whitelist.FirstOrDefault((item) => item.Id == scriptId);
             if (script == null)
@@ -253,17 +204,41 @@ namespace ScriptManager.Network
             {
                 if (!script.Enabled && m_scripts.ContainsKey(script.Id))
                 {
-                    Log.Info($"Script {script.Name} disabled, removing...");
+                    Log.Info($"Script {script.Name} disabled, updating clients...");
                     UpdateWhitelist(ScriptManagerPlugin.Instance.Config.Whitelist,
                         new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, script));
                     //scripts.Remove(script.Id);
                 }
                 else if( script.Enabled )
                 {
-                    Log.Info($"Script {script.Name} added or changed, updating...");
+                    Log.Info($"Script {script.Name} added or changed, updating clients...");
                     UpdateWhitelist(ScriptManagerPlugin.Instance.Config.Whitelist,
                         new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, script));
                     //scripts[script.Id] = script.Name;
+                }
+            }
+
+        }
+
+        private static void OnResetScriptToggled(object sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == nameof(ScriptManagerConfig.ResetScriptEnabled))
+            {
+                var action = ListUpdateAction.REMOVE;
+                if (ScriptManagerPlugin.Instance.Config.ResetScriptEnabled)
+                    action = ListUpdateAction.ADD;
+
+                bool isAlreadyActive = m_scripts.ContainsKey(ResetPBScript.Id);
+                if ((isAlreadyActive && action == ListUpdateAction.ADD)
+                    || (!isAlreadyActive && action == ListUpdateAction.REMOVE))
+                    return;
+
+                if (messagingReady)
+                {
+                    var request = new WhitelistActionRequest(
+                        MyAPIGateway.Multiplayer.MyId,
+                        action, new Dictionary<long, string> { { ResetPBScript.Id, ResetPBScript.Name } });
+                    Broadcast(request);
                 }
             }
 

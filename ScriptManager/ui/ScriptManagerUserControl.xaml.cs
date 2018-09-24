@@ -45,9 +45,9 @@ namespace ScriptManager.Ui
                 var scriptEntry = new ScriptEntry()
                 {
                     Name = scriptData.Script.Name,
-                    Code = scriptCode,
                     Enabled = false
                 };
+                scriptEntry.Code = scriptCode;
                 (DataContext as ScriptManagerConfig).Whitelist.Add(scriptEntry);
             };
 
@@ -88,6 +88,8 @@ namespace ScriptManager.Ui
         private void RemoveSelectedScript(object sender, RoutedEventArgs e)
         {
             var scriptEntry = (WhitelistTable.SelectedItem as ScriptEntry);
+            if (scriptEntry == null)
+                return;
             scriptEntry.Delete();
             (DataContext as ScriptManagerConfig).Whitelist.Remove(scriptEntry);
         }

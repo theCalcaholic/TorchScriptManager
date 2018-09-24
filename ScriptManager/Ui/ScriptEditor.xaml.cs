@@ -73,6 +73,7 @@ namespace ScriptManager.Ui
             context.Code = script.Code;
             context.WorkshopID = script.WorkshopID;
             context.KeepUpdated = script.KeepUpdated;
+            context.Id = script.Id;
             if (context.WorkshopID == 0)
                 HideWorkshopSettings();
             hasScriptBeenLoaded = true;
@@ -168,6 +169,17 @@ namespace ScriptManager.Ui
                 SetValue(ref _workshopId, value);
             }
         }
+
+        private long _id;
+        public long Id
+        {
+            get => _id;
+            set
+            {
+                SetValue(ref _id, value);
+            }
+        }
+
         private bool _keepUpdated;
         public bool KeepUpdated
         {

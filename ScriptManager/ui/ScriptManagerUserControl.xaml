@@ -10,7 +10,16 @@
         <local:ScriptManagerConfig/>
     </UserControl.DataContext>
     <StackPanel>
-        <CheckBox Content="Enable Whitelist" Margin="3" IsChecked="{Binding Enabled}"/>
+        <CheckBox Content="Enable Whitelist" Margin="3" IsChecked="{Binding Enabled}">
+        <ToolTipService.ToolTip>
+            <ToolTip Content="Enable Plugin alltogether (Requires restart of Torch)."></ToolTip>
+        </ToolTipService.ToolTip>
+        </CheckBox>
+        <CheckBox Content="Add Reset Script" Margin="3" IsChecked="{Binding ResetScriptEnabled}">
+            <ToolTipService.ToolTip>
+                    <ToolTip Content="Add a script to the whitelist which enables players to reset a PB's Storage variable."></ToolTip>
+            </ToolTipService.ToolTip>
+        </CheckBox>
         <DataGrid Name="WhitelistTable" 
                   ItemsSource="{Binding Whitelist, UpdateSourceTrigger=PropertyChanged}" 
                   Margin="10" 

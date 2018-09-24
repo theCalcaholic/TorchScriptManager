@@ -64,6 +64,13 @@ namespace ScriptManager
         //private long ModMessageHandlerId = 36235;
         //private long PluginMessageHandlerId = 59300040;
 
+        public bool IsServerRunning {
+            get
+            {
+                return _sessionManager.CurrentSession.State != TorchSessionState.Unloaded;
+            }
+        }
+
 #if DEBUG
         public const long MOD_ID = 1478287109; // testing version
 #else
@@ -94,37 +101,55 @@ namespace ScriptManager
             ScriptsPath = Path.Combine(StoragePath, "Scripts");
 
             _config = Persistent<ScriptManagerConfig>.Load(Path.Combine(StoragePath, "ScriptManager.cfg"));
+
             ScriptEntry.loadingComplete = true;
+            Log.Info("Config has been loaded.");
+
+            Instance = this;
 
             _sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
             if (_sessionManager != null)
                 _sessionManager.SessionStateChanged += OnSessionStateChanged;
+            
             var patchMgr = torch.Managers.GetManager<PatchManager>();
             var patchContext = patchMgr.AcquireContext();
-            PatchModlist(patchContext);
+            PatchSession(patchContext);
             PatchPB(patchContext);     //apply hooks
             patchMgr.Commit();
             //Your init code here, the game is not initialized at this point.
-            Instance = this;
 
-            foreach (var script in _config.Data.Whitelist)
+            Task.Run(delegate
             {
-                string code = "";
-                code = script.Code;
-                script.MD5Hash = Util.GetMD5Hash(code);
-            }
+                foreach (var script in _config.Data.Whitelist)
+                {
+                    string code = "";
+                    code = script.Code;
+                    script.MD5Hash = Util.GetMD5Hash(code);
+                }
+            });
 
             MessageHandler.Init();
         }
 
-        static public void PatchModlist(PatchContext context)
+        static public void PatchSession(PatchContext context)
         {
             var sessionGetWorld = typeof(MySession).GetMethod(nameof(MySession.GetWorld));
             if (sessionGetWorld == null)
                 throw new InvalidOperationException("Couldn't find method MySession.GetWorld!");
-
             context.GetPattern(sessionGetWorld).Suffixes.Add(typeof(ScriptManagerPlugin).GetMethod(nameof(SuffixGetWorld),
                 BindingFlags.Static | BindingFlags.NonPublic));
+
+            var sessionSave = typeof(MySession).GetMethod(nameof(MySession.Save));
+            if (sessionSave == null)
+                throw new InvalidOperationException("Couldn't patch method MySession.Save");
+            context.GetPattern(sessionSave).Prefixes.Add(typeof(ScriptManagerPlugin).GetMethod(nameof(PrefixWorldSave),
+                BindingFlags.Static | BindingFlags.NonPublic));
+        }
+
+        static private bool PrefixWorldSave()
+        {
+            Instance.OnWorldSave();
+            return true;
         }
 
         static private void SuffixGetWorld(ref MyObjectBuilder_World __result)
@@ -162,70 +187,49 @@ namespace ScriptManager
 
             //program = program.Replace(" \r", "");
             var whitelist = Instance.Config.Whitelist;
-            var runningScripts = Instance.Config.RunningScripts;
+            //var runningScripts = Instance.Config.RunningScripts;
             var scriptHash = Util.GetMD5Hash(program);
             var comparer = StringComparer.OrdinalIgnoreCase;
-            foreach (var script in whitelist)
+
+            if (Instance.Config.ResetScriptEnabled && comparer.Compare(scriptHash, ResetPBScript.MD5) == 0)
             {
-                if (script.Enabled && comparer.Compare(scriptHash, script.MD5Hash) == 0)
+                Log.Info($"Script '{ResetPBScript.Name}' found on whitelist! Compiling...");
+                return true;
+            }
+
+            foreach (var wScript in whitelist)
+            {
+                if (wScript.Enabled && comparer.Compare(scriptHash, wScript.MD5Hash) == 0)
                 {
-                    Instance.Config.AddRunningScript(pb.EntityId, script);
-                    Log.Info("Script found on whitelist! Compiling...");
+                    Instance.Config.AddRunningScript(pb.EntityId, wScript);
+                    Log.Info($"Script '{wScript.Name}' found on whitelist! Compiling...");
                     return true;
                 }
-                /*else
-                {
-                    Log.Info("Script is different to " + script.Name);
-                    var comparison = "";
-                    for (int i = 0; i < Math.Max(program.Length, script.Code.Length); i++)
-                    {
-                        if( i >= program.Length )
-                        {
-                            comparison += "<|" + script.Code[i] + ">";
-                        }
-                        else if( i >= script.Code.Length )
-                        {
-                            comparison += "<" + program[i] + "|>";
-                        }
-                        else if( program[i] == script.Code[i] )
-                        {
-                            comparison += program[i];
-                        }
-                        else
-                        {
-                            comparison += "<" + program[i] + "|" + script.Code[i] + ">";
-                        }
-                    }
-                    comparison = comparison.Replace("\r", "\\r");
-                    comparison = comparison.Replace("\n", "\\n");
-                    comparison = comparison.Replace("\t", "\\t");
-                    Log.Info(comparison);
-                }*/
             }
             //_instance?.SetDetailedInfo("Script is not whitelisted. Compilation rejected!");
 
             //MyMultiplayer.RaiseEvent<MyProgrammableBlock>(__instance, (MyProgrammableBlock x) => x.WriteProgramResponse, msg, default(EndpointId));
 
-            if (runningScripts.ContainsKey(pb.EntityId))
-            {
-                var script = runningScripts[pb.EntityId];
+            var script = Instance.Config.RunningScripts.GetValueOrDefault(pb.EntityId);
                 
-                if (runningScripts[pb.EntityId] != null
-                    && whitelist.Contains(runningScripts[pb.EntityId]))
+            if (script != null && whitelist.Contains(script) && script.Enabled)
+            {
+                var verifyHash = Util.GetMD5Hash(script.Code);
+
+                // check that script is not already loaded (and compilation failed for other reasons)
+                if (comparer.Compare(scriptHash, script.MD5Hash) != 0
+                    // and that script code can be successfully hashed
+                    && script.Code != null && comparer.Compare(verifyHash, script.MD5Hash) == 0)
                 {
-                    if (comparer.Compare(scriptHash, script.MD5Hash) != 0)
-                    {
-                        Log.Info($"PB '{pb.EntityId}' seems to be outdated, updating code (script = {runningScripts[pb.EntityId].Name})...");
-                        (pb as IMyProgrammableBlock).ProgramData = runningScripts[pb.EntityId].Code;
-                        return false;
-                    }
+                    Log.Info($"PB '{pb.EntityId}' seems to be outdated, updating code (script = {script.Name})...");
+                    (pb as IMyProgrammableBlock).ProgramData = script.Code;
+                    return false;
                 }
-                else
-                {
-                    runningScripts[pb.EntityId]?.ProgrammableBlocks.Remove(pb.EntityId);
-                    runningScripts.Remove(pb.EntityId);
-                    
-                }
+            }
+            else if( script != null )
+            {
+                script?.ProgrammableBlocks.Remove(pb.EntityId);
+                Instance.Config.RunningScripts.Remove(pb.EntityId);
             }
 
             var msg = "Script is not whitelisted. Compilation rejected!";
@@ -236,7 +240,7 @@ namespace ScriptManager
             var setDetailedInfo = typeof(MyProgrammableBlock).GetMethod("SetDetailedInfo", BindingFlags.NonPublic | BindingFlags.Instance);
             if (setDetailedInfo == null)
                 throw new InvalidOperationException("method SetDetailedInfo could not be retrieved!");
-            Task.Delay(300).ContinueWith(_ =>
+            Task.Delay(500).ContinueWith(_ =>
             {
                 setDetailedInfo.Invoke(__instance, new object[] { msg });
             });
@@ -264,14 +268,6 @@ namespace ScriptManager
             return false;
         }
 
-        /*static public void SetPBDetailedInfo(string info, object instance)
-        {
-            var setDetailedInfo = typeof(MyProgrammableBlock).GetMethod("SetDetailedInfo", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (setDetailedInfo == null)
-                throw new InvalidOperationException("method SetDetailedInfo could not be retrieved!");
-            setDetailedInfo.Invoke(instance, new object[] { info });
-        }*/
-
         /// <inheritdoc />
         public override void Update()
         {
@@ -295,40 +291,45 @@ namespace ScriptManager
             switch (newState)
             {
                 case TorchSessionState.Loading:
-                    Log.Info("Asynchronously updating all scripts...");
+                    Config.LoadRunningScriptsFromWorld();
+                    Log.Info("Updating all scripts...");
                     List<Task> taskList = new List<Task>();
                     foreach (var script in Config.Whitelist)
                     {
-                        if (script.Enabled)
-                            foreach (var pbId in script.ProgrammableBlocks)
-                                Config.AddRunningScript(pbId, script);
                         if (script.KeepUpdated)
                             taskList.Add(script.UpdateFromWorkshopAsync());
                     }
+                    //Task.WaitAll(taskList.ToArray());
                     break;
                 //Executed before the world loads.
                 case TorchSessionState.Loaded:
+                    //Executed after the world has loaded.
                     MessageHandler.SetupMessaging();
                     //Task.WaitAll(taskList.ToArray());
-                    //Executed after the world has loaded.
                     break;
                 case TorchSessionState.Unloading:
+                    Config.SaveRunningScriptsToWorld();
                     //Executed before the world unloads.
                     break;
                 case TorchSessionState.Unloaded:
+                    MessageHandler.TearDown();
                     //Executed after the world unloads.
                     break;
             }
         }
 
-        private void OnModReady(object data)
+        private void OnWorldSave()
         {
-            SendWhitelistToMod();
+            Config.SaveRunningScriptsToWorld();
         }
 
-        private void SendWhitelistToMod()
+        private void OnModReady(object data)
         {
-            Log.Info("Transmitting Whitelist to mod!");
+            SendWhitelistToMessageHandler();
+        }
+
+        private void SendWhitelistToMessageHandler()
+        {
             var scriptTitles = new Dictionary<long, string>();
             var scriptBodies = new Dictionary<long, string>();
             foreach(var script in Whitelist)

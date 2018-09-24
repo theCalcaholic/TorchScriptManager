@@ -169,6 +169,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ResetPBScript.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Network\MessageHandler.cs" />
     <Compile Include="Ui\AddFromWorkshopDialog.xaml.cs">

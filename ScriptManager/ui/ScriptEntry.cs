@@ -28,9 +28,8 @@ namespace ScriptManager.Ui
     {
         private static Logger Log = LogManager.GetLogger("ScriptManager");
         private bool _enabled;
-        private static long nextId = 0;
         private static List<long> assignedIds = new List<long>();
-        public static bool loadingComplete;
+        public static bool loadingComplete = false;
 
         [DefaultValue(-1)]
         private long _id = -1;
@@ -44,6 +43,7 @@ namespace ScriptManager.Ui
                 OnPropertyChanged();
             }
         }
+
         public long Id
         {
             get => _id;
@@ -116,20 +116,11 @@ namespace ScriptManager.Ui
             return !loadingComplete;
         }
 
-        private string _code = null;
-        //[XmlIgnore]
+        [XmlIgnore]
         public string Code
         {
             get
             {
-                //if (ScriptManagerPlugin.Instance?.Config?.SaveLoadMode ?? true)
-                //    return "";
-
-                if (_code != null)
-                {
-                    Code = _code;
-                    _code = null;
-                }
 
                 var scriptPath = GetScriptPath();
                 if( MyFileSystem.FileExists(scriptPath) )
@@ -161,7 +152,7 @@ namespace ScriptManager.Ui
                     return;
                 }*/
 
-                if (!loadingComplete && value == "")
+                if (!loadingComplete)
                     return;
 
                 if (value == null)
@@ -210,6 +201,7 @@ namespace ScriptManager.Ui
 
         private ObservableCollection<long> _programmableBlocks = new ObservableCollection<long>();
 
+        [XmlIgnore]
         public ObservableCollection<long> ProgrammableBlocks
         {
             get => _programmableBlocks;
@@ -223,7 +215,6 @@ namespace ScriptManager.Ui
         {
             Id = GetValidId();
 
-            var script = this;
             ProgrammableBlocks.CollectionChanged += (object sender, NotifyCollectionChangedEventArgs e) => {
                 /*if (e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Replace)
                     foreach (long pbId in e.OldItems)

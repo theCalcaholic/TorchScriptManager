@@ -108,7 +108,7 @@ Echo(""Main"");
             {
                 return l;
             }
-            ModLogger.Info("No script with id '{0}' found in Whitelist.", l);
+            ModLogger.Warning("No script with id '{0}' found in Whitelist.", l);
             return Config.NOSCRIPT.Key;
         }
 

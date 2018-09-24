@@ -18,7 +18,6 @@ namespace ScriptManager.Ui
             if (parameter is string fString)
                 if (double.TryParse(fString, NumberStyles.Float, CultureInfo.CreateSpecificCulture("en-US"), out double factorParam))
                     factor = factorParam;
-            Log.Info($"Multiply converter value is: {(double)value}, factor is: {factor}, result is: {((double) value) * factor}");
             return ((double)value) * factor;
         }
 

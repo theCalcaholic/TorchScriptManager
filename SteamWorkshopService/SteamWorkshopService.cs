@@ -101,9 +101,11 @@ namespace SteamWorkshopTools
                 if( detailsList == null || resultCount == null)
                 {
                     Log.Error("Received invalid data: ");
+#if DEBUG
                     if(allFilesDetails != null)
                         PrintKeyValue(allFilesDetails);
                     return null;
+#endif
                 }
                 if ( detailsList.Count != workshopIds.Count() || resultCount != workshopIds.Count())
                 {
@@ -217,7 +219,7 @@ namespace SteamWorkshopTools
         }
 
 
-        #region CALLBACKS
+#region CALLBACKS
         private void OnConnected( SteamClient.ConnectedCallback callback)
         {
             Log.Info("Connected to Steam! Logging in '{0}'...", Username);
@@ -268,7 +270,7 @@ namespace SteamWorkshopTools
             IsReady = false;
             Log.Info($"Logged off of Steam: {callback.Result}");
         }
-        #endregion
+#endregion
 
     }
 }
