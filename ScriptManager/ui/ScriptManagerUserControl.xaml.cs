@@ -16,8 +16,9 @@ using System.ComponentModel;
 using System.Windows.Markup;
 using Torch.Views;
 using NLog;
+using ScriptManager;
 
-namespace ScriptManager
+namespace ScriptManager.Ui
 {
     /// <summary>
     /// Interaction logic for ScriptmanagerUserControl.xaml
@@ -35,19 +36,18 @@ namespace ScriptManager
 
         public void OpenAddFromCodeDialog(object sender, RoutedEventArgs e)
         {
-            var editor = new TextEditor();
+            var editor = new ScriptEditor();
 
-            editor.SaveAndClose += (object s, TextEditor.ScriptSaveEventArgs scriptData) =>
+            editor.SaveAndClose += (object s, ScriptEditor.ScriptSaveEventArgs scriptData) =>
             {
-                var scriptCode = scriptData.Code.Replace("\r", "");
-                var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
+                var scriptCode = scriptData.Script.Code.Replace("\r", "");
+                //var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
                 var scriptEntry = new ScriptEntry()
                 {
-                    Name = scriptData.Title,
-                    MD5Hash = scriptHash,
-                    Code = scriptCode,
+                    Name = scriptData.Script.Name,
                     Enabled = false
                 };
+                scriptEntry.Code = scriptCode;
                 (DataContext as ScriptManagerConfig).Whitelist.Add(scriptEntry);
             };
 
@@ -55,7 +55,8 @@ namespace ScriptManager
         }
         public void OpenAddFromWorkshopDialog(object sender, RoutedEventArgs e)
         {
-            Log.Info("Open AddFromWorkshop Dialog..");
+            var dialog = new AddFromWorkshopDialog();
+            dialog.Show();
         }
 
         private void WhitelistUpdated(object sender, DataTransferEventArgs e)
@@ -65,14 +66,18 @@ namespace ScriptManager
 
         private void EditSelectedScript(object sender, RoutedEventArgs e)
         {
-            var editor = new TextEditor();
+            var editor = new ScriptEditor();
             var script = WhitelistTable.SelectedItem as ScriptEntry;
             editor.LoadScript(script);
 
-            editor.SaveAndClose += (object s, TextEditor.ScriptSaveEventArgs scriptData) =>
+            editor.SaveAndClose += (object s, ScriptEditor.ScriptSaveEventArgs scriptData) =>
             {
-                script.Name = scriptData.Title;
-                script.Code = scriptData.Code;
+                var scriptCode = scriptData.Script.Code.Replace("\r", "");
+                //var scriptHash = ScriptManagerPlugin.GetMD5Hash(scriptCode);
+                script.Name = scriptData.Script.Name;
+                script.Code = scriptCode;
+                script.KeepUpdated = scriptData.Script.KeepUpdated;
+                //script.MD5Hash = scriptHash;
                 WhitelistUpdated(this, null);
             };
 
@@ -82,8 +87,11 @@ namespace ScriptManager
 
         private void RemoveSelectedScript(object sender, RoutedEventArgs e)
         {
-            (DataContext as ScriptManagerConfig).Whitelist.Remove(
-                (WhitelistTable.SelectedItem as ScriptEntry));
+            var scriptEntry = (WhitelistTable.SelectedItem as ScriptEntry);
+            if (scriptEntry == null)
+                return;
+            scriptEntry.Delete();
+            (DataContext as ScriptManagerConfig).Whitelist.Remove(scriptEntry);
         }
     }
 }

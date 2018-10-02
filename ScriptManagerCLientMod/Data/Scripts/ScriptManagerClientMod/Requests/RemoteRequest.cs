@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ProtoBuf;
 
-namespace ScriptManagerClientMod
+namespace ScriptManager.ClientMod.Requests
 {
     [ProtoContract]
     [ProtoInclude(1, typeof(RecompileRequest))]

@@ -1,0 +1,167 @@
+﻿<Window x:Class="ScriptManager.Ui.ScriptEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:local="clr-namespace:ScriptManager.Ui"
+        mc:Ignorable="d" 
+        d:DesignHeight="{Binding SystemParameters.PrimaryScreenHeight, Converter={StaticResource Multiply}, ConverterParameter=0.7}"
+        d:DesignWidth="{Binding SystemParameters.PrimaryScreenHeight, Converter={StaticResource Multiply}, ConverterParameter=0.5}">
+    <Window.DataContext>
+        <local:ScriptData/>
+    </Window.DataContext>
+    <Window.Resources>
+        <local:MultiplyConverter x:Key="Multiply"/>
+        <local:InvertBooleanConverter x:Key="Negate"/>
+    </Window.Resources>
+    <Grid VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition>
+                <RowDefinition.Style>
+                    <Style TargetType="RowDefinition">
+                        <Setter Property="Height" Value="Auto"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                                <Setter Property="Height" Value="0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </RowDefinition.Style>
+            </RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Label Grid.Row="0" Grid.Column="0" Content="Script Name:" Margin="12 12 6 12"></Label>
+        <TextBox Name="TitleEditor" 
+                 Text="{Binding Name, Mode=TwoWay}"
+                 Grid.Row="0" Grid.Column="1" 
+                 HorizontalAlignment="Left"
+                 Margin="0 12"
+                 Width="250" 
+                 AcceptsReturn="False" 
+                 MaxLines="1" 
+                 Height="{Binding FontSize, RelativeSource={RelativeSource Self}, Converter={StaticResource Multiply}, ConverterParameter=1.5}">
+        </TextBox>
+        <Label Content="ScriptID: " Grid.Row="0" Grid.Column="2" Margin="12 12 0 12">
+            <Label.Style>
+                <Style TargetType="Label">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Id}" Value="-1">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Label.Style>
+        </Label>
+        <Label Content="{Binding Id}" Grid.Row="0" Grid.Column="3" Margin="0 12 0 12">
+            <Label.Style>
+                <Style TargetType="Label">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Id}" Value="-1">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Label.Style>
+        </Label>
+        <Label Content="WorkshopID:" Grid.Row="1" Margin="12 12 6 12">
+            <Label.Style>
+                <Style TargetType="Label">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Label.Style>
+        </Label>
+        <TextBox Name="WorkshopIDEditor"
+               Width="100"
+               Margin="0 12"
+               Padding="0"
+               Height="{Binding FontSize, RelativeSource={RelativeSource Self}, Converter={StaticResource Multiply}, ConverterParameter=1.5}"
+               Text="{Binding WorkshopID}"
+               BorderThickness="1"
+               BorderBrush="DarkGray"
+               Background="#E8E8E8"
+               IsReadOnly="True"
+               HorizontalAlignment="Left"
+               Grid.Row="1" Grid.Column="1">
+            <TextBox.Style>
+                <Style TargetType="TextBox">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
+        <CheckBox Name="KeepUpdatedCheckBox"
+                  IsChecked="{Binding KeepUpdated}"
+                  Margin="24 12 6 12"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Center"
+                  Grid.Row="1" Grid.Column="2">
+            <CheckBox.Style>
+                <Style TargetType="CheckBox">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </CheckBox.Style>
+        </CheckBox>
+        <Label Content="Keep Updated" Grid.Row="1" Grid.Column="3" Margin="0 12">
+            <Label.Style>
+                <Style TargetType="Label">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding WorkshopID}" Value="0">
+                            <Setter Property="Visibility" Value="Hidden"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Label.Style>
+        </Label>
+        <TextBox Name="CodeEditor"
+                 Text="{Binding Code}"
+                 Margin="12"
+                 IsReadOnly="{Binding KeepUpdated}"
+                 Grid.Row="2"
+                 Grid.ColumnSpan="5"
+                 TextWrapping="NoWrap"
+                 AcceptsReturn="True"
+                 AcceptsTab="True"
+                 Height="Auto"
+                 HorizontalAlignment="Stretch"
+                 VerticalScrollBarVisibility="Auto">
+        </TextBox>
+        <Button Name="SaveButton"
+                Content="Save"
+                Grid.Row="3"
+                Grid.ColumnSpan="5"
+                HorizontalAlignment="Center"
+                Margin="12"
+                Click="Save"/>
+        <Label Name="NotificationBox"
+               Grid.Row="4"
+               Grid.ColumnSpan="5"
+               Margin="12"
+               Height="{Binding FontSize, RelativeSource={RelativeSource Self}, Converter={StaticResource Multiply}, ConverterParameter=5}"
+               Background="LightGray"
+               BorderBrush="DarkGray"
+               BorderThickness="1"
+               VerticalContentAlignment="Center"
+               HorizontalContentAlignment="Center"/>
+    </Grid>
+</Window>

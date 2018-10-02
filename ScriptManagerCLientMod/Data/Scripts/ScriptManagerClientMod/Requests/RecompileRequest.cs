@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using ProtoBuf;
 using System.ComponentModel;
 
-namespace ScriptManagerClientMod
+namespace ScriptManager.ClientMod.Requests
 {
     [ProtoContract]
-    class RecompileRequest : RemoteRequest
+    public class RecompileRequest : RemoteRequest
     {
         [ProtoMember]
         public long PbId = 0;
