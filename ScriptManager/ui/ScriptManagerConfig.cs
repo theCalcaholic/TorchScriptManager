@@ -65,7 +65,9 @@ namespace ScriptManager.Ui
         public void SaveRunningScriptsToWorld()
         {
             var running = new Dictionary<long, long>();
+#if DEBUG
             Log.Info("Saving running scripts to world...");
+#endif
             if (RunningScripts != null)
             {
                 int i = 0;
@@ -129,7 +131,17 @@ namespace ScriptManager.Ui
             if (!script.ProgrammableBlocks.Contains(pbId))
                 script.ProgrammableBlocks.Add(pbId);
             RunningScripts[pbId] = script;
-            //SaveRunningScriptsToWorld();
+            SaveRunningScriptsToWorld();
+        }
+
+        public void RemoveRunningScript(long pbId)
+        {
+            if (RunningScripts.ContainsKey(pbId))
+            {
+                RunningScripts[pbId].ProgrammableBlocks.Remove(pbId);
+                RunningScripts.Remove(pbId);
+                SaveRunningScriptsToWorld();
+            }
         }
 
         private void OnScriptEntryChanged(object sender, PropertyChangedEventArgs e)

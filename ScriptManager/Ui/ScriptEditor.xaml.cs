@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
 using Torch;
+using Torch.Server.Views;
 using NLog;
 
 namespace ScriptManager.Ui
@@ -54,7 +55,16 @@ namespace ScriptManager.Ui
                     }
                 }
             };
-    }
+
+            ThemeControl.UpdateDynamicControls += new Action<ResourceDictionary>(UpdateResourceDict);
+            UpdateResourceDict(ThemeControl.currentTheme);
+        }
+
+        public void UpdateResourceDict(ResourceDictionary dictionary)
+        {
+            Resources.MergedDictionaries.Clear();
+            Resources.MergedDictionaries.Add(dictionary);
+        }
 
         public void HideWorkshopSettings()
         {

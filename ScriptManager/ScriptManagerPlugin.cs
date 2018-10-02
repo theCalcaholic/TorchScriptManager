@@ -116,6 +116,7 @@ namespace ScriptManager
             PatchSession(patchContext);
             PatchPB(patchContext);     //apply hooks
             patchMgr.Commit();
+
             //Your init code here, the game is not initialized at this point.
 
             Task.Run(delegate
@@ -139,11 +140,17 @@ namespace ScriptManager
             context.GetPattern(sessionGetWorld).Suffixes.Add(typeof(ScriptManagerPlugin).GetMethod(nameof(SuffixGetWorld),
                 BindingFlags.Static | BindingFlags.NonPublic));
 
-            var sessionSave = typeof(MySession).GetMethod(nameof(MySession.Save));
+            
+            /* This doesn't work for some reason...
+             * 
+             * var sessionSave = typeof(MySession).GetMethod(nameof(MySession.Save), 
+                new Type[] { typeof(MySessionSnapshot).MakeByRefType(), typeof(string) });
             if (sessionSave == null)
                 throw new InvalidOperationException("Couldn't patch method MySession.Save");
-            context.GetPattern(sessionSave).Prefixes.Add(typeof(ScriptManagerPlugin).GetMethod(nameof(PrefixWorldSave),
-                BindingFlags.Static | BindingFlags.NonPublic));
+            var pattern = context.GetPattern(sessionSave);
+            pattern.PrintMsil = true;
+            pattern.Prefixes.Add(typeof(ScriptManagerPlugin).GetMethod(nameof(PrefixWorldSave),
+                BindingFlags.Static | BindingFlags.NonPublic));*/
         }
 
         static private bool PrefixWorldSave()
@@ -229,7 +236,7 @@ namespace ScriptManager
             else if( script != null )
             {
                 script?.ProgrammableBlocks.Remove(pb.EntityId);
-                Instance.Config.RunningScripts.Remove(pb.EntityId);
+                Instance.Config.RemoveRunningScript(pb.EntityId);
             }
 
             var msg = "Script is not whitelisted. Compilation rejected!";

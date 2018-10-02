@@ -16,8 +16,8 @@ using ScriptManager;
 using System.ComponentModel;
 using Sandbox.Engine.Networking;
 using NLog;
-
 using Torch;
+using Torch.Server.Views;
 using SteamWorkshopTools;
 
 namespace ScriptManager.Ui
@@ -41,6 +41,14 @@ namespace ScriptManager.Ui
             Status.PropertyChanged += (object sender, PropertyChangedEventArgs e) => { UpdateLayout(); };
             AllowsTransparency = false;
 
+
+            ThemeControl.UpdateDynamicControls += new Action<ResourceDictionary>(UpdateResourceDict);
+            UpdateResourceDict(ThemeControl.currentTheme);
+        }
+        public void UpdateResourceDict(ResourceDictionary dictionary)
+        {
+            Resources.MergedDictionaries.Clear();
+            Resources.MergedDictionaries.Add(dictionary);
         }
 
         public async void AddScript(object sender, RoutedEventArgs e)
