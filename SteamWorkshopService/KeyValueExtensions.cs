@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using NLog;
 using SteamKit2;
 
-namespace SteamWorkshopTools
+namespace SteamWorkshopService
 {
     public static class KeyValueExtensions
     {

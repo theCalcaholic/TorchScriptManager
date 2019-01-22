@@ -11,9 +11,9 @@ using System.Net;
 using NLog;
 using SteamKit2;
 using System.Net.Http;
-using SteamWorkshopTools.Types;
+using SteamWorkshopService.Types;
 
-namespace SteamWorkshopTools
+namespace SteamWorkshopService
 {
     public class WebAPI
     {
@@ -86,16 +86,23 @@ namespace SteamWorkshopTools
             {
                 KeyValue allFilesDetails = null ;
                 remoteStorage.Timeout = TimeSpan.FromSeconds(30);
-                try
-                {
-                    allFilesDetails = await Task.Run(delegate { return remoteStorage.GetPublishedFileDetails1(itemcount: 1, publishedfileids: workshopIds, method: HttpMethod.Post); });
-                    //fileDetails = remoteStorage.Call(HttpMethod.Post, "GetPublishedFileDetails", 1, new Dictionary<string, string>() { { "itemcount", workshopIds.Count().ToString() }, { "publishedfileids", workshopIds.ToString() } });
-                }
-                catch(HttpRequestException e )
-                {
-                    Log.Error($"Fetching File Details failed: {e.Message}");
+                allFilesDetails = await Task.Run(delegate {
+                    try
+                    {
+                        return remoteStorage.GetPublishedFileDetails1(
+                            itemcount: workshopIds.Count(), 
+                            publishedfileids: workshopIds, 
+                            method: HttpMethod.Post);
+                    }
+                    catch (HttpRequestException e)
+                    {
+                        Log.Error($"Fetching File Details failed: {e.Message}");
+                        return null;
+                    }
+                });
+                if (allFilesDetails == null)
                     return null;
-                }
+                //fileDetails = remoteStorage.Call(HttpMethod.Post, "GetPublishedFileDetails", 1, new Dictionary<string, string>() { { "itemcount", workshopIds.Count().ToString() }, { "publishedfileids", workshopIds.ToString() } });
                 var detailsList = allFilesDetails?.Children.Find((KeyValue kv) => kv.Name == "publishedfiledetails")?.Children;
                 var resultCount = allFilesDetails?.GetValueOrDefault<int>("resultcount");
                 if( detailsList == null || resultCount == null)

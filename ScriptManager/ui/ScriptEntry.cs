@@ -19,8 +19,8 @@ using VRage;
 using VRage.FileSystem;
 using System.IO;
 using Sandbox.ModAPI;
-using SteamWorkshopTools;
-using SteamWorkshopTools.Types;
+using SteamWorkshopService;
+using SteamWorkshopService.Types;
 
 namespace ScriptManager.Ui
 {

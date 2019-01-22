@@ -18,7 +18,7 @@ using Sandbox.Engine.Networking;
 using NLog;
 using Torch;
 using Torch.Server.Views;
-using SteamWorkshopTools;
+using SteamWorkshopService;
 
 namespace ScriptManager.Ui
 {
